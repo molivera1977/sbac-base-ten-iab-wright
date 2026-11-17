@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Divide and times go together · SBAC IAB Base Ten</title>
+<link rel="stylesheet" href="../lib/engine.css?v=fa68c4a8">
+<link rel="expect" href="#bar" blocking="render">
+</head>
+<body>
+<script src="../lib/engine.js?v=d6885892"></script>
+<script src="../lib/nbt.js?v=82e3c77d"></script>
+<script src="../lib/embed.js?v=3bc13d2d"></script>
+<script src="audio/en/timings.js?v=6c6d1d6f"></script>
+<script>
+'use strict';
+/* Mr. O's 4th grade · SBAC Base Ten IAB · video 10: DIVIDE AND TIMES GO TOGETHER, the IAB's "same unknown number" kind
+   ("Which equation has the same unknown number as 88 ÷ 2 = □?" — spots 3 and 9). Practice: 🎬 Show me / Watch how at
+   spots 3 and 9; Warm-Up Watch "Divide and multiply".
+     63 ÷ 7 = □ · 63 is the total, 7 is one factor, the box is the other factor · 7 × □ = 63 asks the same thing (the
+     choice) · 7 × 9 = 63: the box is 9 in both.
+   The trap (VIDEOS.md, the site's own wrong choice): 63 × 7 = □ makes the box much too big — the total stays alone on
+   one side. The total purple, the factor teal all the way down; the four choices are the site's own shapes. */
+const CHAPTER = { number: 10, title: 'Divide and times go together', minutes: 1, language: 'en' };
+
+const TOT = HUNS, FAC = TEAL, BOX = ' 0 ';              // BOX: the place a □ is drawn (an empty white box)
+const RX = 1170, L1 = 470, L2 = 700, BSZ = 100;         // the work at the right: two lines
+
+// draw the empty box over piece k of a dLine (its text hidden), as the site's □
+const boxAt = (line, k, t, stroke = '#64748b') => {
+  const e = line.row[k], s = line.row.size;
+  put(e, { o: 0 });
+  const r = mk('rect', { x: e._px - s * .34, y: line.row.y - s * .78, width: s * .68, height: s * .86, rx: s * .1, fill: '#ffffff', stroke, 'stroke-width': Math.max(3, s * .05) }, line);
+  put(r, { o: 0 }); show(r, t, .4);
+  return r;
+};
+// a number typed into a box piece k of a dLine
+const fillBox = (p, line, k, str, t) => dLine(p, [{ t: str, fill: ORANGE }], line.row[k]._px, line.row.y, t, { size: line.row.size });
+const tot = s => ({ t: s, fill: TOT }), fac = s => ({ t: s, fill: FAC });
+
+const BEATS = [
+  // (the kit sizes this 28-letter title at 78, wider than its card: set to 66 after it is drawn)
+  ['intro', 'Divide and times go together', (m) => {
+    titleBeat('Divide and times go together', 'Find the times fact that asks the same thing.')(m);
+    for (const t of S.panel.querySelectorAll('text')) if (t.textContent === 'Divide and times go together') t.setAttribute('font-size', 66);
+  }],
+
+  ['steps', 'The same thing', (m) => {
+    const p = panel(0);
+    // "Which equation has the same unknown number as sixty-three divided by seven equals box?" — the IAB's question
+    const g = G(p, { o: 0 });
+    mk('rect', { x: 100, y: 50, width: 1400, height: 230, rx: 22, fill: '#ffffff', stroke: '#c9d3dc', 'stroke-width': 3 }, g);
+    T(g, 'Which equation has the same unknown number as', { x: 134, y: 118, size: 46, fill: INK, weight: 700 });
+    show(g, .3, .5);
+    const q = S.ques = dLine(p, [tot('63'), ' ÷ ', fac('7'), ' = ', BOX], 134, 235, m('s1', -3.4), { size: 84, anchor: 'start' });
+    dLater(q, [1, 2], m('s1', -2.6)); dLater(q, [3], m('s1', -1.47));
+    boxAt(q, 4, m('s1', -1));
+    // the four choices, as the site shows them
+    const ch = S.ch = dChoices(p, [
+      [tot('63'), ' × ', fac('7'), ' = ', BOX],
+      [fac('7'), ' × ', BOX, ' = ', tot('63')],
+      [BOX, ' ÷ ', fac('7'), ' = ', tot('63')],
+      [tot('63'), ' − ', fac('7'), ' = ', BOX],
+    ], 100, 330, m('s1', -.6), { w: 600, h: 100, gap: 22, size: 64 });
+    ch.forEach((c, i) => boxAt(c.line, [4, 2, 0, 4][i], m('s1', -.6 + i * .12)));
+    // "Divide and times go together." — the problem, big, at the right
+    const a = S.a = dLine(p, [tot('63'), ' ÷ ', fac('7'), ' = ', BOX], RX, L1, m('s1', .3), { size: BSZ });
+    dFly(a, [0, 1, 2, 3, 4], i => [q.row[i]._px, q.row.y], m('s1', .3), .9);
+    S.aBox = boxAt(a, 4, m('s1', 1.1));
+    // "Sixty-three is the total. Seven is one factor. The box is the other factor."
+    dText(p, 'total', a.row[0]._px, L1 + 70, m('tot', 1.2), { size: 38, fill: TOT, weight: 700 });
+    dNudge(a.row[0], m('tot'));
+    dText(p, 'factor', a.row[2]._px, L1 + 70, m('f1', 1.1), { size: 38, fill: FAC, weight: 700 });
+    dNudge(a.row[2], m('f1'));
+    dText(p, 'factor', a.row[4]._px, L1 + 70, m('f2', 1.25), { size: 38, fill: FAC, weight: 700 });
+    // "Seven times box equals sixty-three asks the same thing." — the same three, put in a times fact
+    const b = S.b = dLine(p, [fac('7'), ' × ', BOX, ' = ', tot('63')], RX, L2, m('same'), { size: BSZ });
+    dFly(b, [0], [a.row[2]._px, L1], m('same'), .8);
+    dLater(b, [1], m('same', .53));
+    dFly(b, [2], [a.row[4]._px, L1], m('same', .93), .8); boxAt(b, 2, m('same', .93));
+    dLater(b, [3], m('same', 1.28));
+    dFly(b, [4], [a.row[0]._px, L1], m('same', 1.73), .8);
+    ch[1].glow(m('same', 2.7));
+  }],
+
+  ['answer', 'Nine in both', (m) => {
+    const p = S.panel;
+    // "Seven times nine is sixty-three."
+    fillBox(p, S.b, 2, '9', m('a', .88));
+    // "The box is nine in both."
+    fillBox(p, S.a, 4, '9', m('b', .78));
+    dNudge(S.b.row[2], m('b', .3));
+  }],
+
+  ['mistake', 'Watch out', (m) => {
+    const p = panel(0);
+    dWatchOut(p, .3, 800, 110);
+    // "Sixty-three times seven equals blank makes the box much too big." (11/14: "box" → "blank", Marcos)
+    const bad = dMistake(p, [tot('63'), ' × ', fac('7'), ' = ', BOX], 800, 600, m('w'), null, { size: 100, strike: [0, 4], strikeAt: m('w', 4.1) });
+    dLater(bad, [1, 2], m('w', .78)); dLater(bad, [3], m('w', 1.63));
+    boxAt(bad, 4, m('w', 2.06), RED);
+    dText(p, 'The box is much too big.', 800, 720, m('w', 4.1), { size: 46, fill: RED, weight: 700 });
+    // "The total stays alone on one side." — the right one above it
+    const right = dRight(p, [fac('7'), ' × ', BOX, ' = ', tot('63')], 760, 360, m('alone'), { size: 100 });
+    boxAt(right, 2, m('alone'));
+    const r = mk('circle', { cx: right.row[4]._px, cy: 360 - 34, r: 66, fill: 'none', stroke: TOT, 'stroke-width': 6 }, p);
+    put(r, { o: 0 }); show(r, m('alone', 1.02), .3);
+  }, { minDur: 9.8 }],
+
+  ['wrap', 'Remember', rememberBeat([['Find the total.', 'w1'], ['Factor × blank = the total.', 'w2']])],
+].map(([id, title, run, extra]) => ({ id, title, run, ...extra }));
+
+boot();
+</script>
+</body>
+</html>

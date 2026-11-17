@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>The missing digit · SBAC IAB Base Ten</title>
+<link rel="stylesheet" href="../lib/engine.css?v=fa68c4a8">
+<link rel="expect" href="#bar" blocking="render">
+</head>
+<body>
+<script src="../lib/engine.js?v=d6885892"></script>
+<script src="../lib/nbt.js?v=82e3c77d"></script>
+<script src="../lib/embed.js?v=3bc13d2d"></script>
+<script src="audio/en/timings.js?v=7c92b6e5"></script>
+<script>
+'use strict';
+/* Mr. O's 4th grade · SBAC Base Ten IAB · video 2: THE MISSING DIGIT, the IAB's typed kind ("74,171 < 74,1□0. What digit
+   can go in the box to make this true? Type one digit." — spot 2). Practice: 🎬 Show me / Watch how at spot 2 (no Warm-Up
+   Watch card).
+     52,641 > 52,6□8 · start at the left: 5 = 5, 2 = 2, 6 = 6 · the box is in the tens · try 4 (the same as the top):
+     52,648 — the ones tell, 8 > 1, so 52,648 is greater: 4 does not work · try 3: 52,638 is less: 3 works ·
+     0, 1, 2 or 3 can go in the box → type one digit.
+   The trap (VIDEOS.md): the same digit as the top — the place after the box decides. Tens blue, ones green. */
+const CHAPTER = { number: 2, title: 'The missing digit', minutes: 1, language: 'en' };
+
+const PX = 150, PY = 175, PSZ = 100;
+const COLS = [230, 340, 480, 590, 700];                 // ten thousands, thousands, hundreds, tens, ones
+const TOP_Y = 565, BOT_Y = 695, LAB_Y = 448, SZ = 100;
+const DCOL = [INK, INK, INK, TENS, ONES];
+const TRY_X = 1200;                                        // the tries, at the right
+
+// a digit in a column of the stacked numbers (k = 0 ten thousands … 4 ones)
+const digit = (p, d, k, y, t, fill = DCOL[k]) => dLine(p, [{ t: String(d), fill }], COLS[k], y, t, { size: SZ });
+const comma = (p, y, t) => dLine(p, [','], COLS[1] + 50, y, t, { size: SZ });
+// the empty box a missing digit sits in, centred at (x, y = the digits' baseline)
+const slot = (p, x, y, t, size = SZ, stroke = '#94a3b8') => {
+  const r = mk('rect', { x: x - size * .38, y: y - size * .8, width: size * .76, height: size * .94, rx: size * .12, fill: '#ffffff', stroke, 'stroke-width': 5 }, p);
+  put(r, { o: 0 }); show(r, t, .4);
+  return r;
+};
+// a soft band down one column (behind), shown from t0, hidden at t1
+const band = (p, k, fill, t0, t1) => {
+  const r = mk('rect', { x: COLS[k] - 52, y: LAB_Y - 46, width: 104, height: BOT_Y - LAB_Y + 82, rx: 20, fill }, p);
+  p.insertBefore(r, p.firstChild);
+  put(r, { o: 0 }); show(r, t0, .4);
+  if (t1 != null) hide(r, t1, .4);
+  return r;
+};
+const cross = (p, x, y, t, s = 26) => {
+  const c = path(p, `M${x - s} ${y - s}L${x + s} ${y + s}M${x + s} ${y - s}L${x - s} ${y + s}`, { stroke: RED, 'stroke-width': 9 }, { d: 0 });
+  draw(c, t, .35);
+  return c;
+};
+
+const BEATS = [
+  ['intro', 'The missing digit', titleBeat('The missing digit', 'What digit can go in the box?')],
+
+  ['steps', 'Try a digit', (m) => {
+    const p = panel(0);
+    // "Here is fifty-two thousand, six hundred forty-one, is greater than, fifty-two thousand, six hundred, blank, eight."
+    // (11/14: "box" → "blank", Marcos; re-timed to the new recording: each piece shows as Ava says it)
+    const prob = S.prob = dLine(p, ['5', '2', ',', '6', '4', '1', ' > ', '5', '2', ',', '6', ' 0 ', '8'], PX, PY, .3, { size: PSZ, anchor: 'start' });
+    put(prob.row[11], { o: 0 });                                               // the box's place
+    slot(prob, prob.row[11]._px, PY, m('q', -1.5), PSZ);                      // "blank"
+    dLater(prob, [6], m('q', -5.7));                                           // "is greater than"
+    dLater(prob, [7, 8, 9, 10], m('q', -4.2));                                 // "fifty-two thousand, six hundred"
+    dLater(prob, [12], m('q', -.73));                                          // "eight"
+    const card = dCard(p, PX - 52, PY - 112, prob.row.w + 104, 160, BLUE_BG, .3);
+    p.insertBefore(card, p.firstChild);
+    // the site's typing box for one digit
+    dText(p, '✏️ One digit:', PX + prob.row.w + 300, PY - 30, .3, { size: 40, fill: BLUE, weight: 700, anchor: 'end' });
+    S.box = dEntry(p, PX + prob.row.w + 320, PY, .3, { w: 120, size: PSZ });
+    // "What digit can go in the box?"
+    dAsk(p, 'What digit can go in the box to make this true?', 150, 330, m('q'), { w: 1300, size: 46 });
+    // "Start at the left." — the two numbers come down, one under the other, place under place
+    const top = S.top = [[0, 0], [1, 1], [3, 2], [4, 3], [5, 4]].map(([i, k], n) => {
+      const d = digit(p, prob.row[i].textContent, k, TOP_Y, m('s1', n * .08));
+      dFly(d, [0], [prob.row[i]._px, PY], m('s1', n * .08), .8);
+      return d;
+    });
+    dFly(comma(p, TOP_Y, m('s1')), [0], [prob.row[2]._px, PY], m('s1'), .8);
+    [[7, 0], [8, 1], [10, 2], [12, 4]].forEach(([i, k], n) => dFly(digit(p, prob.row[i].textContent, k, BOT_Y, m('s1', .3 + n * .08)), [0], [prob.row[i]._px, PY], m('s1', .3 + n * .08), .8));
+    dFly(comma(p, BOT_Y, m('s1', .3)), [0], [prob.row[9]._px, PY], m('s1', .3), .8);
+    const box = S.slot = slot(p, COLS[3], BOT_Y, m('s1', .5));
+    // "The places match until the box." — 5 and 5, 2 and 2, 6 and 6
+    [0, 1, 2].forEach(k => dTick(p, COLS[k], BOT_Y + 70, m('s2', .7 + k * .3)));
+    // "The box is in the tens."
+    band(p, 3, TENS_BG, m('s3', .5), m('ones'));
+    dText(p, 'tens', COLS[3], LAB_Y, m('s3', .9), { size: 40, fill: TENS, weight: 700 });
+    tw(box, { c_stroke: TENS }, m('s3', .5), .4);
+    // "Try four, the same as the top."
+    const four = S.four = digit(p, 4, 3, BOT_Y, m('try4', .38));
+    dNudge(top[3].row[0], m('try4', 1.6));                                    // "the same as the top"
+    // "Fifty-two thousand, six hundred forty-eight." — the first try, written out at the right
+    const t1 = S.t1 = dLine(p, ['52,641', ' > ', '52,6', { t: '4', fill: TENS }, '8'], TRY_X, TOP_Y, m('n4'), { size: 64 });
+    // "Look at the ones. Eight is more than one."
+    band(p, 4, ONES_BG, m('ones', .4));
+    dText(p, 'ones', COLS[4], LAB_Y, m('ones', .5), { size: 40, fill: ONES, weight: 700 });
+    // "So fifty-two thousand, six hundred forty-eight is greater. Four does not work!"
+    dNudge(t1.row[4], m('o')); dNudge(t1.row[0], m('o', 1.24));               // "Eight … one"
+    cross(p, TRY_X + t1.row.w / 2 + 52, TOP_Y - 22, m('no', .5));
+    tw(four.row[0], { o: .25 }, m('no', .5), .4);
+  }],
+
+  ['answer', 'Type one digit', (m) => {
+    const p = S.panel;
+    // "Try three. Fifty-two thousand, six hundred thirty-eight is less. Three works."
+    hide(S.four, m('try3'), .3);
+    const three = digit(p, 3, 3, BOT_Y, m('try3', .4));
+    const t2 = dLine(p, ['52,641', ' > ', '52,6', { t: '3', fill: TENS }, '8'], TRY_X, BOT_Y, m('n3'), { size: 64 });
+    dTick(p, TRY_X + t2.row.w / 2 + 56, BOT_Y - 22, m('yes', .2));
+    // "Zero, one, two, or three can go in the box."
+    const chips = ['0', '1', '2', '3'].map((d, k) => {
+      const at = [0, .9, 1.36, 2.23][k], x = TRY_X - 165 + k * 110, y = 838;
+      const g = G(p, { x, y: y - 24, o: 0, s: .6 });
+      mk('rect', { x: -44, y: -44, width: 88, height: 88, rx: 18, fill: '#d4edda', stroke: '#28a745', 'stroke-width': 4 }, g);
+      T(g, d, { x: 0, y: 20, size: 60, fill: '#155724', weight: 700, anchor: 'middle', font: MATH });
+      tw(g, { o: 1, s: 1 }, m('all', at), .4, back);
+      return g;
+    });
+    // "Type one digit." — one of them goes in the box
+    const e = S.box.type('3', m('type', .3));
+    dFly(e, [0], [TRY_X - 165 + 330, 814], m('type', .3), .8);
+    dNudge(chips[3], m('type'));
+    dNudge(three.row[0], m('yes', .2));
+  }],
+
+  ['mistake', 'Watch out', (m) => {
+    const p = panel(0);
+    dWatchOut(p, .3, 800, 110);
+    // the two numbers, stacked, on the left: the box holds the same digit as the top
+    const cx = [170, 260, 375, 480, 595], y1 = 430, y2 = 550, sz = 84;
+    '52641'.split('').forEach((d, k) => dLine(p, [{ t: d, fill: DCOL[k] }], cx[k], y1, .4, { size: sz }));
+    [[0, '5'], [1, '2'], [2, '6'], [4, '8']].forEach(([k, d]) => dLine(p, [{ t: d, fill: DCOL[k] }], cx[k], y2, .4, { size: sz }));
+    [y1, y2].forEach(y => dLine(p, [','], cx[1] + 42, y, .4, { size: sz }));
+    slot(p, cx[3], y2, .4, sz, TENS);
+    dLine(p, [{ t: '4', fill: TENS }], cx[3], y2, .4, { size: sz });
+    // "The same digit is a trap."
+    const R = 1130;
+    const bad = dMistake(p, ['52,641', ' > ', '52,6', { t: '4', fill: RED }, '8'], R, 600, m('w'), null, { size: 72, strike: [3, 3], strikeAt: m('w', 1.28) });
+    dText(p, 'The same digit is a trap.', R, 700, m('w', 1.28), { size: 42, fill: RED, weight: 700 });
+    // "Check the place after the box." — the ones decide
+    [[cx[4], y1], [cx[4], y2]].forEach(([x, y], n) => {
+      const r = mk('circle', { cx: x, cy: y - sz * .33, r: 50, fill: 'none', stroke: ONES, 'stroke-width': 6 }, p);
+      put(r, { o: 0 }); show(r, m('next', .45 + n * .2), .3);
+    });
+    // "Three works. Four does not." — the right one above
+    const right = dRight(p, ['52,641', ' > ', '52,6', { t: '3', fill: TENS }, '8'], R - 40, 400, m('r'), { size: 72 });
+    dNudge(right.row[3], m('r', .3)); dNudge(bad.row[3], m('r', 1.39));          // "Three … Four"
+  }, { minDur: 9.4 }],
+
+  ['wrap', 'Remember', rememberBeat([['Start at the left.', 'w1'], ['Try a digit in the box.', 'w2'], ['Check the next place.', 'w3']])],
+].map(([id, title, run, extra]) => ({ id, title, run, ...extra }));
+
+boot();
+</script>
+</body>
+</html>

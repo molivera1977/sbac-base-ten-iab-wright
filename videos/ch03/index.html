@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Which place tells · SBAC IAB Base Ten</title>
+<link rel="stylesheet" href="../lib/engine.css?v=fa68c4a8">
+<link rel="expect" href="#bar" blocking="render">
+</head>
+<body>
+<script src="../lib/engine.js?v=d6885892"></script>
+<script src="../lib/nbt.js?v=82e3c77d"></script>
+<script src="../lib/embed.js?v=3bc13d2d"></script>
+<script src="audio/en/timings.js?v=267e7275"></script>
+<script>
+'use strict';
+/* Mr. O's 4th grade · SBAC Base Ten IAB · video 3: WHICH PLACE TELLS, the IAB's select-all kind ("Look at these numbers:
+   4,220, 4,161, 4,155, 4,282. Which statements are true? Select all that are true." — spot 8). Practice: 🎬 Show me /
+   Watch how at spot 8; Warm-Up Watch "Compare numbers".
+     7,486 or 7,452? · start at the left: thousands 7 and 7 same, hundreds 4 and 4 same, tens 8 and 5 different → the
+     tens place tells: 7,486 > 7,452 · on the test, check each statement: "7,486 > 7,452. The tens place tells which is
+     greater." ✓ · "7,486 > 7,152. The tens place tells which is greater." — the hundreds are different first, so false.
+   The trap (VIDEOS.md): a statement can be greater and still name the wrong place. Thousands ink, hundreds purple, tens
+   blue, ones green; the select-all rows are the site's own (white rows, a check box, green when right). */
+const CHAPTER = { number: 3, title: 'Which place tells', minutes: 1, language: 'en' };
+
+const PCOL = [INK, HUNS, TENS, ONES], PBG = ['#e5e9ee', HUNS_BG, TENS_BG, ONES_BG];
+const PLACE = ['thousands', 'hundreds', 'tens', 'ones'];
+
+/* a stacked pair of 4-digit numbers, place under place: cols = the 4 column centres; returns its pieces
+   { d: [[top digits], [bottom digits]], band(k, t0, t1), label(k, t) } */
+const stack = (p, a, b, cols, ys, labY, [ta, tb], { size = 110, gap = .12 } = {}) => {
+  const d = [a, b].map((n, r) => String(n).split('').map((c, k) => dLine(p, [{ t: c, fill: PCOL[k] }], cols[k], ys[r], (r ? tb : ta) + k * gap, { size })));
+  ys.forEach((y, r) => dLine(p, [','], cols[0] + size * .48, y, r ? tb : ta, { size }));
+  const w = (cols[1] - cols[0]) * .86;
+  return {
+    d,
+    band(k, s, e) {
+      const r = mk('rect', { x: cols[k] - w / 2, y: labY - size * .45, width: w, height: ys[1] - labY + size * .75, rx: 22, fill: PBG[k] }, p);
+      p.insertBefore(r, p.firstChild); put(r, { o: 0 }); show(r, s, .4);
+      if (e != null) hide(r, e, .4);
+      return r;
+    },
+    label(k, t, sz = 34) { return dText(p, PLACE[k], cols[k], labY, t, { size: sz, fill: PCOL[k], weight: 700 }); },
+  };
+};
+/* one row of the site's "select all that are true": a white row with a check box, its letter and its words.
+   parts = [[text, colour], …] (a place word in its colour). Drawn around its own centre. */
+const msRow = (p, letter, parts, x, y, w, h, t0, { size = 40 } = {}) => {
+  const g = G(p, { x: x + w / 2, y: y + h / 2, o: 0 });
+  mk('rect', { x: -w / 2, y: -h / 2 + 5, width: w, height: h, rx: 16, fill: '#d6dbe0' }, g);
+  const face = mk('rect', { x: -w / 2, y: -h / 2, width: w, height: h, rx: 16, fill: '#ffffff', stroke: '#d6dbe0', 'stroke-width': 3 }, g);
+  put(face, { c_fill: '#ffffff', c_stroke: '#d6dbe0' });
+  const bx = -w / 2 + 34;
+  const box = mk('rect', { x: bx, y: -22, width: 44, height: 44, rx: 9, fill: '#ffffff', stroke: '#94a3b8', 'stroke-width': 4 }, g);
+  put(box, { c_fill: '#ffffff', c_stroke: '#94a3b8' });
+  T(g, `${letter}.`, { x: bx + 66, y: size * .35, size, weight: 800, fill: INK });
+  let cx = bx + 66 + uiW(`${letter}. `, size) + 6;
+  const words = parts.map(([str, fill]) => { const e = T(g, str, { x: cx, y: size * .35, size, weight: 600, fill: fill || INK }); e._x = cx; e._w = uiW(str, size); cx += e._w; return e; });
+  tw(g, { o: 1 }, t0, .4);
+  const tickIn = (t) => { const k = path(g, `M${bx + 10} 0l9 10l17 -20`, { stroke: '#ffffff', 'stroke-width': 6 }, { d: 0 }); draw(k, t, .3); };
+  return {
+    g, words, face,
+    pick(t) { tw(box, { c_fill: '#f9a825', c_stroke: '#f57f17' }, t, .3); tickIn(t + .1); },
+    right(t) { tw(face, { c_fill: '#d4edda', c_stroke: '#28a745' }, t, .4); tw(box, { c_fill: '#28a745', c_stroke: '#28a745' }, t, .4); dNudge(g, t); },
+    wrong(t) {
+      tw(face, { c_fill: '#f8d7da', c_stroke: '#dc3545' }, t, .4);
+      const xx = w / 2 - 50, s = 18;
+      draw(path(g, `M${xx - s} ${-s}L${xx + s} ${s}M${xx + s} ${-s}L${xx - s} ${s}`, { stroke: RED, 'stroke-width': 8 }, { d: 0 }), t + .2, .35);
+    },
+    // a soft underline under word k (to point at "tens")
+    under(k, t, color) { const e = words[k]; draw(path(g, `M${e._x} ${size * .62}H${e._x + e._w}`, { stroke: color, 'stroke-width': 6 }, { d: 0 }), t, .4); },
+  };
+};
+
+const BEATS = [
+  ['intro', 'Which place tells', titleBeat('Which place tells', 'Find the first place that is different.')],
+
+  ['steps', 'Start at the left', (m) => {
+    const p = panel(0);
+    // "Which is greater? Seven thousand four hundred eighty-six, or seven thousand four hundred fifty-two?"
+    dAsk(p, 'Which is greater?', 150, 140, .3, { w: 520, size: 50 });
+    const cols = [225, 415, 600, 780], ys = [440, 590];
+    const top = stack(p, 7486, 7452, cols, ys, 300, [m('n1', .1), m('n2', .3)]);   // each number as Ava says it
+    // "Start at the left."
+    PLACE.forEach((w, k) => top.label(k, m('s1', .2 + k * .12)));
+    // "Thousands, seven and seven. Same."
+    top.band(0, m('th'), m('h'));
+    dTick(p, cols[0], 680, m('th', 2.54));
+    // "Hundreds, four and four. Same."
+    top.band(1, m('h'), m('t'));
+    dTick(p, cols[1], 680, m('h', 2.35));
+    // "Tens, eight and five. Different!"
+    top.band(2, m('t'));
+    dNudge(top.d[0][2], m('t', .68)); dNudge(top.d[1][2], m('t', 1.12));
+    const ring = mk('rect', { x: cols[2] - 78, y: 300 - 50, width: 156, height: 590 - 300 + 82, rx: 22, fill: 'none', stroke: TENS, 'stroke-width': 7 }, p);
+    put(ring, { o: 0 }); show(ring, m('t', 2.18), .3);
+    // "The tens place tells."
+    dText(p, 'The tens place tells.', 1220, 440, m('tells', .2), { size: 50, fill: TENS, weight: 800 });
+    // "So seven thousand four hundred eighty-six is greater."
+    const v = dLine(p, ['7,486', ' > ', '7,452'], 1220, 590, m('g', .3), { size: 84, card: ORANGE_BG });
+    dLater(v, [1, 2], m('g', 2.68));
+  }],
+
+  ['test', 'Check each statement', (m) => {
+    const p = panel(0);
+    // the IAB's own question: select all that are true
+    dAsk(p, 'Which statements are true? Select all that are true.', 100, 135, .3, { w: 1400, size: 46 });
+    // "On the test, check each statement."
+    const a = S.a = msRow(p, 'A', [['7,486 > 7,452. The '], ['tens', TENS], [' place tells which is greater.']], 100, 230, 1400, 104, .5);
+    // "Does it name the first place that is different?"
+    a.under(1, m('name', 1.06), TENS);
+    // "This one does. True!"
+    a.pick(m('yes', .3));
+    a.right(m('yes', 1.52));
+  }],
+
+  ['second', 'The wrong place', (m) => {
+    const p = S.panel;
+    // "This one has seven thousand one hundred fifty-two."
+    const b = msRow(p, 'B', [['7,486 > 7,152. The '], ['tens', TENS], [' place tells which is greater.']], 100, 364, 1400, 104, m('b'));
+    // the two numbers stacked under the rows, place under place
+    const cols = [300, 450, 590, 730], ys = [640, 770];
+    const st = stack(p, 7486, 7152, cols, ys, 545, [m('b', .4), m('b', .9)], { size: 90, gap: .06 });
+    // "The hundreds are different first."
+    st.band(1, m('h'));
+    st.label(1, m('h', .2));
+    // "Four is more than one."
+    dNudge(st.d[0][1], m('more')); dNudge(st.d[1][1], m('more', .95));
+    // "The hundreds place tells."
+    dText(p, 'The hundreds place tells.', 1180, 640, m('hp', .2), { size: 50, fill: HUNS, weight: 800 });
+    const v = dLine(p, ['7,486', ' > ', '7,152'], 1180, 770, m('hp', .2), { size: 76 });
+    // "So this one is false."
+    b.under(1, m('f'), RED);
+    b.wrong(m('f', .9));
+  }],
+
+  ['mistake', 'Watch out', (m) => {
+    const p = panel(0);
+    dWatchOut(p, .3, 800, 110);
+    // "A statement can be greater and still name the wrong place."
+    const bad = dMistake(p, ['7,486 > 7,152. The ', { t: 'tens', fill: RED }, ' place tells.'], 800, 600, m('w'), null, { size: 64, strike: [1, 1], strikeAt: m('w', 2.64) });
+    dText(p, 'Names the wrong place.', 800, 712, m('w', 2.64), { size: 44, fill: RED, weight: 700 });
+    // "Here, the hundreds place tells." — the right one above it
+    const right = dRight(p, ['7,486 > 7,152. The ', { t: 'hundreds', fill: HUNS }, ' place tells.'], 760, 380, m('r'), { size: 64 });
+    dNudge(right.row[1], m('r', 1.02));
+  }, { minDur: 9 }],
+
+  ['wrap', 'Remember', rememberBeat([['Start at the left.', 'w1'], ['The first different place tells.', 'w2'], ['Check every statement.', 'w3']])],
+].map(([id, title, run, extra]) => ({ id, title, run, ...extra }));
+
+boot();
+</script>
+</body>
+</html>

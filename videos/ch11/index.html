@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>What can you buy? · SBAC IAB Base Ten</title>
+<link rel="stylesheet" href="../lib/engine.css?v=fa68c4a8">
+<link rel="expect" href="#bar" blocking="render">
+</head>
+<body>
+<script src="../lib/engine.js?v=d6885892"></script>
+<script src="../lib/nbt.js?v=82e3c77d"></script>
+<script src="../lib/embed.js?v=3bc13d2d"></script>
+<script src="audio/en/timings.js?v=6839b28d"></script>
+<script>
+'use strict';
+/* Mr. O's 4th grade · SBAC Base Ten IAB · video 11: WHAT CAN YOU BUY?, the IAB's store-poster select-all ("Ben has 190
+   tickets to spend at the School Store. Which sets of things can Ben buy? Select all that are true." — spot 10).
+   Practice: 🎬 Show me / Watch how at spot 10; Warm-Up Watch "What can you buy?".
+     Lena has 170 tickets. Can she buy 2 puzzles and 3 stickers? · count the things at each price: 2 things cost 40,
+     2 × 40 = 80 · 3 things cost 15, 3 × 15 = 45 · add: 80 + 45 = 125, less than 170: yes · on the test, check every
+     choice: select all that are true.
+   Numbers: 170 tickets (VIDEOS.md 11/14; 180 was a real test number). The trap: a set that costs more than the tickets
+   (5 folders: 5 × 40 = 200 > 170) cannot be bought. The poster and the select-all rows are the site's own; the things at
+   40 tickets purple, the things at 15 tickets sky blue, all the way down. */
+const CHAPTER = { number: 11, title: 'What can you buy?', minutes: 1, language: 'en' };
+
+const PUR = GROUP[2], SKY = GROUP[6], PUR_BG = GROUP_BG[2], SKY_BG = GROUP_BG[6];
+const ITEMS = [['sticker', '⭐', 15], ['pencil', '✏️', 15], ['pen', '🖊️', 15], ['puzzle', '🧩', 40], ['book', '📘', 40], ['folder', '📁', 40]];
+
+/* the site's School Store poster (visuals.js pricesHTML): cream card, a title, one white tile per thing (picture, name,
+   price in green). Two columns: the 15-ticket things, then the 40-ticket things. Returns { ring(k, t, colour) }. */
+const poster = (p, x, y, w, t0) => {
+  const g = G(p, { o: 0 }), rowH = 150, colW = (w - 60) / 2, h = 96 + 3 * rowH + 10;
+  mk('rect', { x, y: y + 6, width: w, height: h, rx: 18, fill: '#e9c46a' }, g);
+  mk('rect', { x, y, width: w, height: h, rx: 18, fill: '#fffaf0', stroke: '#e9c46a', 'stroke-width': 4 }, g);
+  T(g, '🏪 School Store', { x: x + w / 2, y: y + 64, size: 46, weight: 800, anchor: 'middle', fill: '#7a4b00' });
+  const tiles = ITEMS.map(([name, emoji, price], k) => {
+    const tx = x + 20 + Math.floor(k / 3) * (colW + 20), ty = y + 96 + (k % 3) * rowH;
+    mk('rect', { x: tx, y: ty, width: colW, height: rowH - 18, rx: 14, fill: '#ffffff', stroke: '#f0dca8', 'stroke-width': 3 }, g);
+    T(g, emoji, { x: tx + 38, y: ty + 82, size: 50, anchor: 'middle' });
+    // the price as big as fits the tile (never under 32; uiW measures at 600, the price is bolder: +10 %)
+    let ps = 40; while (ps > 32 && uiW(`${price} tickets`, ps) * 1.1 > colW - 84) ps -= 2;
+    T(g, name, { x: tx + 74, y: ty + 54, size: ps, weight: 700, fill: INK });
+    T(g, `${price} tickets`, { x: tx + 74, y: ty + 108, size: ps, weight: 800, fill: '#1e7e46' });
+    return { tx, ty, w: colW, h: rowH - 18 };
+  });
+  show(g, t0, .5);
+  return {
+    g,
+    ring(k, t, color) {
+      const b = tiles[k], r = mk('rect', { x: b.tx - 6, y: b.ty - 6, width: b.w + 12, height: b.h + 12, rx: 18, fill: 'none', stroke: color, 'stroke-width': 7 }, p);
+      put(r, { o: 0 }); show(r, t, .3);
+      return r;
+    },
+  };
+};
+// a white question card of one or more lines
+const qCard = (p, lines, x, y, w, t0, { size = 42, gap = 1.45 } = {}) => {
+  const g = G(p, { o: 0 }), h = size * (gap * (lines.length - 1) + 1.75);
+  mk('rect', { x, y: y - size * 1.15, width: w, height: h, rx: 22, fill: '#ffffff', stroke: '#c9d3dc', 'stroke-width': 3 }, g);
+  const ts = lines.map(([str, weight], i) => T(g, str, { x: x + 30, y: y + i * size * gap, size, fill: INK, weight: weight || 600 }));
+  show(g, t0, .5);
+  return Object.assign(g, { ts });
+};
+/* one row of the site's "select all that are true" (as video 3): a white row with a check box, its letter and words.
+   pick(t) checks the box (the site's orange) · right(t) turns the row green · wrong(t) red · strike(t) a red line. */
+const msRow = (p, letter, str, x, y, w, h, t0, { size = 42 } = {}) => {
+  const g = G(p, { x: x + w / 2, y: y + h / 2, o: 0 });
+  mk('rect', { x: -w / 2, y: -h / 2 + 5, width: w, height: h, rx: 16, fill: '#d6dbe0' }, g);
+  const face = mk('rect', { x: -w / 2, y: -h / 2, width: w, height: h, rx: 16, fill: '#ffffff', stroke: '#d6dbe0', 'stroke-width': 3 }, g);
+  put(face, { c_fill: '#ffffff', c_stroke: '#d6dbe0' });
+  const bx = -w / 2 + 32;
+  const box = mk('rect', { x: bx, y: -22, width: 44, height: 44, rx: 9, fill: '#ffffff', stroke: '#94a3b8', 'stroke-width': 4 }, g);
+  put(box, { c_fill: '#ffffff', c_stroke: '#94a3b8' });
+  T(g, `${letter}.`, { x: bx + 64, y: size * .35, size, weight: 800, fill: INK });
+  const tx = bx + 64 + uiW(`${letter}. `, size) + 6, tw0 = uiW(str, size);
+  T(g, str, { x: tx, y: size * .35, size, weight: 600, fill: INK });
+  tw(g, { o: 1 }, t0, .4);
+  return {
+    g,
+    pick(t, fill = '#f9a825', stroke = '#f57f17') {
+      tw(box, { c_fill: fill, c_stroke: stroke }, t, .3);
+      draw(path(g, `M${bx + 10} 0l9 10l17 -20`, { stroke: '#ffffff', 'stroke-width': 6 }, { d: 0 }), t + .1, .3);
+    },
+    right(t) { tw(face, { c_fill: '#d4edda', c_stroke: '#28a745' }, t, .4); tw(box, { c_fill: '#28a745', c_stroke: '#28a745' }, t, .4); },
+    wrong(t) { tw(face, { c_fill: '#f8d7da', c_stroke: '#dc3545' }, t, .4); tw(box, { c_fill: '#dc3545', c_stroke: '#dc3545' }, t, .4); },
+    strike(t) { draw(path(g, `M${tx - 8} ${-size * .15}h${tw0 + 16}`, { stroke: RED, 'stroke-width': 6 }, { d: 0 }), t, .4); },
+  };
+};
+const OPTIONS = ['2 puzzles and 3 stickers', '5 folders', '1 book and 4 pens', '3 books, 1 folder, and 1 pencil'];
+
+const BEATS = [
+  ['intro', 'What can you buy?', titleBeat('What can you buy?', 'Multiply, then add.')],
+
+  ['steps', 'Multiply, then add', (m) => {
+    const p = panel(0);
+    const ps = S.ps = poster(p, 36, 50, 670, .3);
+    // "Lena has one hundred seventy tickets. Can she buy two puzzles and three stickers?"
+    const q = qCard(p, [['Lena has 170 tickets.', 800], ['Can she buy 2 puzzles and 3 stickers?']], 730, 115, 830, .3, { size: 42 });
+    put(q.ts[1], { o: 0 }); show(q.ts[1], m('q'), .4);
+    const X = 1145, size = 62;
+    // "Count the things at each price. Two things cost forty. Two times forty is eighty."
+    ps.ring(3, m('p1', .3), PUR);
+    const l1 = dLine(p, [{ t: '2 puzzles: ', fill: PUR }, { t: '2', fill: PUR }, ' × ', { t: '40', fill: PUR }, ' = ', { t: '80', fill: PUR }], X, 340, m('p1'), { size });
+    dLater(l1, [1], m('m1')); dLater(l1, [2, 3], m('m1', .27)); dLater(l1, [4, 5], m('m1', 1.08));
+    // "Three things cost fifteen. Three times fifteen is forty-five."
+    ps.ring(0, m('p2', .3), SKY);
+    const l2 = dLine(p, [{ t: '3 stickers: ', fill: SKY }, { t: '3', fill: SKY }, ' × ', { t: '15', fill: SKY }, ' = ', { t: '45', fill: SKY }], X, 450, m('p2'), { size });
+    dLater(l2, [1], m('m2')); dLater(l2, [2, 3], m('m2', .36)); dLater(l2, [4, 5], m('m2', 1.34));
+    // "Add. Eighty plus forty-five is one hundred twenty-five."
+    const l3 = dLine(p, [{ t: '80', fill: PUR }, ' + ', { t: '45', fill: SKY }, ' = ', '125'], X, 575, m('s'), { size: 70 });
+    dFly(l3, [0], [l1.row[5]._px, 340], m('s'), .8);
+    dLater(l3, [1, 2], m('s', .38)); dFly(l3, [2], [l2.row[5]._px, 450], m('s', .38), .8);
+    dLater(l3, [3, 4], m('s', 1.57));
+    dNudge(l3.row[0], m('add'));
+    // "That is less than one hundred seventy. Yes!"
+    const l4 = dLine(p, ['125', ' < ', '170'], X, 700, m('less'), { size: 70, card: ORANGE_BG });
+    dLater(l4, [1], m('less', .54)); dLater(l4, [2], m('less', 1.12));
+    dTick(p, X + l4.row.w / 2 + 82, 676, m('yes'));
+    dText(p, 'Yes!', X + l4.row.w / 2 + 130, 700, m('yes'), { size: 56, fill: '#2e7d32', weight: 800, anchor: 'start' });
+  }],
+
+  ['test', 'Select all that are true', (m) => {
+    const p = panel(0);
+    // the IAB's question, the poster and the choices as the site shows them
+    qCard(p, [['Lena has 170 tickets to spend at the School Store.'], ['Which sets of things can Lena buy? Select all that are true.', 800]], 40, 80, 1520, .3, { size: 38 });
+    poster(p, 30, 210, 650, .3);
+    // "Now check every choice."
+    const rows = OPTIONS.map((o, k) => msRow(p, 'ABCD'[k], o, 705, 222 + k * 128, 855, 104, .5 + k * .3, { size: 42 }));
+    // "Select all that are true." — the one we checked
+    rows[0].pick(m('sel', .1));
+    rows[0].right(m('sel', .6));
+  }, { minDur: 7 }],
+
+  ['mistake', 'Watch out', (m) => {
+    const p = panel(0);
+    dWatchOut(p, .3, 800, 110);
+    // the right one above (from before): 125 is less than 170
+    const a = msRow(p, 'A', OPTIONS[0], 130, 190, 1000, 104, m('w'), { size: 44 });
+    a.pick(m('w')); a.right(m('w'));
+    dLine(p, ['125', ' < ', '170'], 1330, 262, m('w'), { size: 60 });
+    // "Five folders. Five times forty is two hundred."
+    const b = msRow(p, 'B', OPTIONS[1], 130, 340, 1000, 104, m('w', .2), { size: 44 });
+    b.pick(m('w', .6));
+    const l = dLine(p, [{ t: '5', fill: PUR }, ' × ', { t: '40', fill: PUR }, ' = ', { t: '200', fill: RED }], 800, 580, m('w', 1.63), { size: 76 });
+    dLater(l, [1, 2], m('w', 2.07)); dLater(l, [3, 4], m('w', 2.92));
+    // "Two hundred is more than one hundred seventy."
+    const g = dLine(p, [{ t: '200', fill: RED }, ' > ', '170'], 800, 710, m('more'), { size: 76 });
+    dLater(g, [1], m('more', 1.15)); dLater(g, [2], m('more', 1.75));
+    // "A set that costs more than the tickets cannot be bought."
+    b.wrong(m('cant', 2.3));
+    b.strike(m('cant', 2.3));
+    dText(p, 'Cannot be bought.', 800, 820, m('cant', 2.3), { size: 46, fill: RED, weight: 700 });
+  }, { minDur: 14.6 }],
+
+  ['wrap', 'Remember', rememberBeat([['Count at each price.', 'w1'], ['Multiply, then add.', 'w2'], ['Check every choice.', 'w3']])],
+].map(([id, title, run, extra]) => ({ id, title, run, ...extra }));
+
+boot();
+</script>
+</body>
+</html>

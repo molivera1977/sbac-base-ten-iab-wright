@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Same number, new look · SBAC IAB Base Ten</title>
+<link rel="stylesheet" href="../lib/engine.css?v=fa68c4a8">
+<link rel="expect" href="#bar" blocking="render">
+</head>
+<body>
+<script src="../lib/engine.js?v=d6885892"></script>
+<script src="../lib/nbt.js?v=82e3c77d"></script>
+<script src="../lib/embed.js?v=3bc13d2d"></script>
+<script src="audio/en/timings.js?v=f97554f3"></script>
+<script>
+'use strict';
+/* Mr. O's 4th grade · SBAC Base Ten IAB · video 4: SAME NUMBER, NEW LOOK, the IAB's True/False table ("Is each statement
+   true or false? Pick True or False for each one." — spots 12 and 15). Practice: 🎬 Show me / Watch how at spots 12 and
+   15; Warm-Up Watch "Same number, new look".
+     528 < 500 + 20 + 8: write each side as one number — 500 + 20 + 8 = 528; the sides are equal, and equal is not less
+     → False · 4 hundreds + 30 tens = 700: 30 tens = 300, 400 + 300 = 700 → True · 6 tens > 500: 6 tens = 60, not 600
+     (read the word after each number); 60 < 500 → False.
+   The trap (VIDEOS.md): the equal one — equal is not less. Hundreds purple, tens blue, ones green; the table's rows and
+   True / False buttons are the site's own. */
+const CHAPTER = { number: 4, title: 'Same number, new look', minutes: 1, language: 'en' };
+
+const ROW_X = 100, ROW_W = 1400, ROW_H = 100, ROW_Y = [200, 320, 440], SSZ = 58;
+const W1 = 655, W2 = 790, WX = 800;                     // the work under the table: two lines
+
+/* one row of the site's True / False table: a white row, the statement (dLine items) on the left and the big True and
+   False buttons on the right. Returns { line, pick(which, t) } — pick turns that button green (the site's "correct"). */
+const tfRow = (p, items, y, t0) => {
+  const g = G(p, { o: 0 });
+  mk('rect', { x: ROW_X, y: y + 5, width: ROW_W, height: ROW_H, rx: 16, fill: '#e0e0e0' }, g);
+  mk('rect', { x: ROW_X, y, width: ROW_W, height: ROW_H, rx: 16, fill: '#ffffff', stroke: '#e0e0e0', 'stroke-width': 3 }, g);
+  tw(g, { o: 1 }, t0, .4);
+  const line = dLine(g, items, ROW_X + 40, y + ROW_H / 2 + SSZ * .35, t0, { size: SSZ, anchor: 'start' });
+  const btn = {};
+  ['True', 'False'].forEach((word, k) => {
+    const cx = ROW_X + ROW_W - 280 + k * 190, cy = y + ROW_H / 2;
+    const b = G(g, { x: cx, y: cy });
+    mk('rect', { x: -80, y: -33, width: 160, height: 70, rx: 14, fill: '#cfd8ea' }, b);
+    const face = mk('rect', { x: -80, y: -37, width: 160, height: 70, rx: 14, fill: '#ffffff', stroke: '#cfd8ea', 'stroke-width': 3 }, b);
+    put(face, { c_fill: '#ffffff', c_stroke: '#cfd8ea' });
+    const t = T(b, word, { x: 0, y: 12, size: 40, weight: 800, anchor: 'middle', fill: BLUE });
+    put(t, { c_fill: BLUE });
+    btn[word] = { b, face, t };
+  });
+  return {
+    g, line,
+    pick(word, t) {
+      const { b, face, t: tx } = btn[word];
+      tw(face, { c_fill: '#d4edda', c_stroke: '#28a745' }, t, .3);
+      tw(tx, { c_fill: '#155724' }, t, .3);
+      dNudge(b, t);
+    },
+  };
+};
+
+const BEATS = [
+  // (the kit sizes a 21-letter title at 96, wider than its card: this one is set to 80 after it is drawn)
+  ['intro', 'Same number, new look', (m) => {
+    titleBeat('Same number, new look', 'Write each side as one number.')(m);
+    for (const t of S.panel.querySelectorAll('text')) if (t.textContent === 'Same number, new look') t.setAttribute('font-size', 80);
+  }],
+
+  ['row1', 'Equal is not less', (m) => {
+    const p = panel(0);
+    // "Is each one true or false?" — the IAB's table
+    dAsk(p, 'Is each statement true or false?', ROW_X, 130, .3, { w: ROW_W, size: 46 });
+    // "Five hundred twenty-eight is less than, five hundred plus twenty plus eight."
+    const r1 = S.r1 = tfRow(p, ['528', ' < ', { t: '500', fill: HUNS }, ' + ', { t: '20', fill: TENS }, ' + ', { t: '8', fill: ONES }], ROW_Y[0], m('r1'));
+    dLater(r1.line, [1], m('r1', 1.43)); dLater(r1.line, [2], m('r1', 2.74)); dLater(r1.line, [3, 4], m('r1', 3.62)); dLater(r1.line, [5, 6], m('r1', 4.4));
+    // "Write each side as one number. Five hundred plus twenty plus eight is five hundred twenty-eight."
+    dNudge(r1.line.row[0], m('s1', .5)); dNudge(r1.line.row[4], m('s1', 1.0));
+    const w1 = S.w1 = dLine(p, [{ t: '500', fill: HUNS }, ' + ', { t: '20', fill: TENS }, ' + ', { t: '8', fill: ONES }, ' = ', '528'], WX, W1, m('sum'), { size: 74 });
+    dLater(w1, [1, 2], m('sum', .88)); dLater(w1, [3, 4], m('sum', 1.56)); dLater(w1, [5, 6], m('sum', 2.44));
+    // "The two sides are equal. Equal is not less. False."
+    const w2 = S.w2 = dLine(p, ['528', ' = ', '528'], WX, W2, m('eq'), { size: 74, card: ORANGE_BG });
+    dNudge(w2.row[1], m('eq', 1.07));
+    S.note = dText(p, 'Equal is not less.', WX + 420, W2 - 22, m('nl'), { size: 44, fill: BLUE, weight: 700 });
+    r1.pick('False', m('f'));
+  }],
+
+  ['row2', 'Read the words', (m) => {
+    const p = S.panel;
+    [S.w1, S.w2, S.note].forEach(e => hide(e, m('r2'), .3));
+    // "Next. Four hundreds plus thirty tens, is equal to seven hundred."
+    const r2 = tfRow(p, [{ t: '4 hundreds', fill: HUNS }, ' + ', { t: '30 tens', fill: TENS }, ' = ', '700'], ROW_Y[1], m('r2'));
+    dLater(r2.line, [0], m('r2', 1.0)); dLater(r2.line, [1, 2], m('r2', 1.84)); dLater(r2.line, [3], m('r2', 3.37)); dLater(r2.line, [4], m('r2', 4.25));
+    // "Thirty tens is three hundred."
+    const a = S.a = dLine(p, [{ t: '30 tens', fill: TENS }, ' = ', { t: '300', fill: HUNS }], WX, W1, m('a'), { size: 74 });
+    dLater(a, [1, 2], m('a', .87));
+    // "Four hundred plus three hundred is seven hundred."
+    const b = S.b = dLine(p, [{ t: '400', fill: HUNS }, ' + ', { t: '300', fill: HUNS }, ' = ', '700'], WX, W2, m('b'), { size: 74, card: ORANGE_BG });
+    dLater(b, [1, 2], m('b', .79)); dLater(b, [3, 4], m('b', 1.99));
+    // "True."
+    r2.pick('True', m('t'));
+  }],
+
+  ['row3', 'Not six hundred', (m) => {
+    const p = S.panel;
+    [S.a, S.b].forEach(e => hide(e, m('r3'), .3));
+    // "Next. Six tens is greater than five hundred."
+    const r3 = tfRow(p, [{ t: '6', fill: TENS }, { t: ' tens', fill: TENS }, ' > ', { t: '500', fill: HUNS }], ROW_Y[2], m('r3'));
+    dLater(r3.line, [0, 1], m('r3', 1.0)); dLater(r3.line, [2], m('r3', 1.87)); dLater(r3.line, [3], m('r3', 2.88));
+    // "Six tens is sixty, not six hundred."
+    const a = dLine(p, [{ t: '6 tens', fill: TENS }, ' = ', { t: '60', fill: TENS }], WX - 120, W1, m('a'), { size: 74 });
+    dLater(a, [1, 2], m('a', .93));
+    dLine(p, [{ t: 'not ', fill: '#6b7680' }, { t: '600', fill: '#6b7680' }], WX + 260, W1, m('a', 1.89), { size: 64 });
+    // "Read the word after each number."
+    dNudge(r3.line.row[1], m('b', .43));
+    const u = path(r3.g, `M${r3.line.row[1]._px - r3.line.row[1]._w / 2 + 14} ${ROW_Y[2] + ROW_H / 2 + SSZ * .55}h${r3.line.row[1]._w - 14}`, { stroke: TENS, 'stroke-width': 6 }, { d: 0 });
+    draw(u, m('b', .43), .4);
+    // "Sixty is less than five hundred."
+    const c = dLine(p, [{ t: '60', fill: TENS }, ' < ', { t: '500', fill: HUNS }], WX, W2, m('c'), { size: 74, card: ORANGE_BG });
+    dLater(c, [1], m('c', .61)); dLater(c, [2], m('c', 1.42));
+    // "False."
+    r3.pick('False', m('f'));
+  }],
+
+  ['mistake', 'Watch out', (m) => {
+    const p = panel(0);
+    dWatchOut(p, .3, 800, 110);
+    // "Equal is not less." — the mistake: calling the equal one less
+    // (a slash through the < — "not less" — in place of the kit's flat strike, which ran into 528 and 500)
+    const bad = dLine(p, ['528', ' ', { t: '<', fill: RED }, ' ', { t: '500', fill: HUNS }, ' + ', { t: '20', fill: TENS }, ' + ', { t: '8', fill: ONES }], 800, 610, m('w'), { size: 84, card: RED_BG });
+    const lt = bad.row[2];
+    draw(path(bad, `M${lt._px - 26} ${610 - 4}L${lt._px + 26} ${610 - 70}`, { stroke: RED, 'stroke-width': 7 }, { d: 0 }), m('w', .92), .4);
+    dText(p, 'Equal is not less.', 800, 730, m('w', .92), { size: 46, fill: RED, weight: 700 });
+    // "The two sides are equal." — the right one above it
+    const right = dRight(p, ['528', ' = ', { t: '500', fill: HUNS }, ' + ', { t: '20', fill: TENS }, ' + ', { t: '8', fill: ONES }], 760, 390, m('r'), { size: 84 });
+    dNudge(right.row[1], m('r', 1.07));
+  }, { minDur: 7.2 }],
+
+  ['wrap', 'Remember', rememberBeat([['Write each side as one number.', 'w1'], ['Then compare.', 'w2'], ['Equal is not less or greater.', 'w3']])],
+].map(([id, title, run, extra]) => ({ id, title, run, ...extra }));
+
+boot();
+</script>
+</body>
+</html>

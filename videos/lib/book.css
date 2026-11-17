@@ -1,0 +1,64 @@
+/* This book's own settings, imported by engine.css. The engine files next to this one are the same in every book
+   and are replaced when the engine is updated; this file is not.
+   Settings (uncomment to use):
+:root {
+  --math-font: "Avenir Next", Arial, sans-serif;   face for numbers and formulas (default: a serif, see engine.js)
+  --progress-key: "progress";                      localStorage key shared with the cover (default: one per book folder)
+  --page: #e9e5d8; --board: #fbfaf5; --panel: #fff; --edge: #d8d2c0;      a light board: the palette at the top of
+  --chalk: #1d1d1f; --dim: #6a6a6e; --faint: #c4bfae;                       engine.css, redefined; the stage, cards,
+  --task: #e2589b; --quiz: #1f6fc5; --good: #3f8a1d; --bad: #d9473a;        bar and COL follow (#rrggbb for the ink
+  --on-fill: #fff; --vignette: rgba(90, 70, 30, .08); color-scheme: light;  and board colours COL reads)
+  --rule: #ece8e0; --track: #e6e2d5; --track-ask: #cfdeeb;                   and the shades between them
+  --bar-edge: #eae6da; --hover: #efede6; --veil: #e9e5d8;
+}
+   Style overrides go here too. They come before the engine's rules, so make each selector more specific than the
+   engine's, e.g. ':root .card.band' for '.card.band'. */
+
+/* Mr. O's 4th grade: a light board like the class sites; big numbers in a plain sans face */
+:root {
+  --math-font: "Avenir Next", Arial, sans-serif;
+  --page: #e9eef0; --board: #fbfcfc; --panel: #fff; --edge: #d3dde0;
+  --chalk: #16211f; --dim: #55646a; --faint: #c3cfd3;
+  --task: #c8501e; --quiz: #1e63c4; --good: #2e7d32; --bad: #c62828;
+  --on-fill: #fff; --vignette: rgba(30, 60, 70, .06); color-scheme: light;
+  --rule: #e6ecee; --track: #dfe6e8; --track-ask: #cfdeeb;
+  --bar-edge: #e3e9eb; --hover: #edf2f3; --veil: #e9eef0;
+}
+
+/* Kid-size question cards (Mr. O's rule: kid text 21px or more after the stage scales down) */
+:root .card.quiz .prompt { font-size: 40px; line-height: 1.25; }
+:root .card.quiz .opt { font-size: 44px; padding: 10px 28px; min-width: 120px; }
+:root .card.quiz .fb { font-size: 32px; line-height: 1.3; }
+:root .card.quiz .kicker { font-size: 24px; }
+:root .card.quiz .btn { font-size: 28px; }
+
+/* Colour on the question cards: soft blue choices (the engine's own right/wrong colours still win) */
+:root .card.quiz .opt:not(.bad):not(.ok) { background: #eaf2ff; border-color: #8fb3ef; }
+:root .card.quiz .opt:not(.bad):not(.ok):hover { background: #dbe8ff; }
+:root .card.quiz .kicker { color: #2f74e0; }
+
+/* 11/11 Mr. O: "a basic gray so everything else pops" — the board is a plain light gray */
+:root { --board: #e2e5e8; --page: #cfd4d9; --veil: #cfd4d9; --edge: #c3c9cf; }
+
+/* 11/13 inside Mr. O's Math Module 4 site (an iframe): no "all chapters" button — the video belongs to the question */
+:root.embedded #bHome { display: none; }
+/* The cover inside the site: the video's name in the site's plain face, one big blue Play, no keyboard notes */
+:root.embedded .cover-k, :root.embedded .cover small { display: none; }
+:root.embedded .cover-t { font: 800 72px/1.12 "Avenir Next", Arial, sans-serif; color: #1d3f8f; margin-bottom: 52px; }
+:root.embedded .cover .go { background: #1e63c4; color: #fff; font-size: 62px; padding: 30px 78px; gap: 20px; }
+:root.embedded .cover .go svg { width: 40px; height: 40px; }
+/* the Warm-Up's Watch waits for this video (?must=1): its Play pulses until pressed (Mr. O 11/4: only a button
+   that must be pressed to go on pulses) */
+@keyframes mm4-pulse { 0% { box-shadow: 0 0 0 0 rgba(30, 99, 196, .55); } 70% { box-shadow: 0 0 0 28px rgba(30, 99, 196, 0); } 100% { box-shadow: 0 0 0 0 rgba(30, 99, 196, 0); } }
+:root.embedded.must .cover .go { animation: rise .7s cubic-bezier(.2, .8, .2, 1) .18s backwards, mm4-pulse 2s ease-out 1s infinite; }
+@media (prefers-reduced-motion: reduce) { :root.embedded.must .cover .go { animation: none; box-shadow: 0 0 0 8px rgba(30, 99, 196, .35); } }
+/* inside the site: the stage starts at the frame's top-left and fills its width (embed.js sets --k); the player
+   bar sits under it */
+:root.embedded:not(.full) #frame { left: 0; top: 0; transform: scale(var(--k, .4)); transform-origin: 0 0; box-shadow: none; border-radius: 0; }
+:root.embedded body { overflow: hidden; }
+/* the full-size control bar at any frame width (the engine's own under-700-px bar: kids' fingers, no tiny icons) */
+:root.embedded:not(.full) #frame { overflow: visible; }
+:root.embedded:not(.full) #bar { width: calc(var(--sw, 1600px) * var(--k)); height: auto; flex-wrap: wrap; gap: 6px; padding: 8px;
+  transform: scale(calc(1 / var(--k))); transform-origin: left top; border-radius: 0 0 12px 12px; }
+:root.embedded:not(.full) #bar .icon { width: 36px; height: 40px; }
+:root.embedded:not(.full) .step { display: none; }

@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Area model · SBAC IAB Base Ten</title>
+<link rel="stylesheet" href="../lib/engine.css?v=fa68c4a8">
+<link rel="expect" href="#bar" blocking="render">
+</head>
+<body>
+<script src="../lib/engine.js?v=d6885892"></script>
+<script src="../lib/nbt.js?v=82e3c77d"></script>
+<script src="../lib/embed.js?v=3bc13d2d"></script>
+<script src="audio/en/timings.js?v=39a02264"></script>
+<script>
+'use strict';
+/* Mr. O's 4th grade · SBAC Base Ten IAB · video 6: AREA MODEL (1-digit × 2-digit), THE SET-UP.
+   Where: the Warm-Up's 👀 Watch card "Area model" (before W19 "Which expression is equal to 6 × 27?").
+   His words 11/14: "the iab focuses on setting the problem up as oppose to actually solving it" · "the area
+   modeling is basically multipling using expanded form". So it ends on the IAB's choice, with no product.
+     3 × 46 · 46 = 40 + 6 · area model: 3 on the side, 40 and 6 on top · parts 3 × 40 | 3 × 6
+     → 3 × 46 = 3 × (40 + 6) → on the test you pick this expression (the choices are the site's own shapes).
+   The trap (VIDEOS.md): (3 × 40) + 6 leaves out a part. 40 blue, 6 green all the way down; 3 (not broken apart) ink. */
+const CHAPTER = { number: 6, title: 'Area model', minutes: 1, language: 'en' };
+
+const PX = 150, PROB_Y = 170, EF_Y = 360, ANS_Y = 790;
+const AREA = { x: 800, y: 320, w: 700, h: 290, side: [3], top: [40, 6], size: 60 };
+
+const BEATS = [
+  ['intro', 'Area model', titleBeat('Area model', 'Use expanded form to set it up.')],
+
+  ['steps', 'Set it up', (m) => {
+    const p = panel(0);
+    // "Here is three times forty-six."
+    const prob = S.prob = dLine(p, ['3', ' × ', '46'], PX, PROB_Y, .3, { size: 96, card: BLUE_BG, anchor: 'start' });
+    // "Write forty-six in expanded form. Forty plus six."
+    dNudge(prob.row[2], m('s1', .33));                                          // "forty-six"
+    const ef = S.ef = dLine(p, ['46', ' = ', { t: '40', fill: TENS }, ' + ', { t: '6', fill: ONES }], PX + 20, EF_Y, m('s1', .33), { size: 80, anchor: 'start' });
+    dLater(ef, [1, 2], m('ef'));                                               // "Forty"
+    dLater(ef, [3], m('ef', .45));                                             // "plus"
+    dLater(ef, [4], m('ef', .75));                                             // "six"
+    // "Draw an area model. Put three on the side. Put forty and six on top."
+    const A = S.A = dArea(p, AREA);
+    A.frame(m('s2', .2));
+    const s0 = A.sideLab(0, m('side', .3));                                    // "three"
+    dFly(s0, [0], [prob.row[0]._px, prob.row.y], m('side', .3), .8);
+    const t0 = A.topLab(0, m('top', .27));                                     // "forty"
+    dFly(t0, [0], [ef.row[2]._px, ef.row.y], m('top', .27), .8);
+    const t1 = A.topLab(1, m('top', 1.1));                                     // "six"
+    dFly(t1, [0], [ef.row[4]._px, ef.row.y], m('top', 1.1), .8);
+    // "The parts are three times forty, and three times six."
+    A.cell(0, 0, m('s3', .85));                                                // "three times forty"
+    A.cell(0, 1, m('p2', .37));                                                // "three times six"
+  }],
+
+  ['answer', 'The set-up', (m) => {
+    const p = S.panel, A = S.A;
+    // "So three times forty-six is equal to three times, forty plus six." — the expression, under the model
+    const ans = S.ans = dLine(p, ['3 × 46', ' = ', '3 × ', '(', { t: '40', fill: TENS }, ' + ', { t: '6', fill: ONES }, ')'], 800, ANS_Y, m('a', .65), { size: 84, card: ORANGE_BG });
+    dLater(ans, [1], m('a', 2.19));                                            // "is equal to"
+    dLater(ans, [2], m('a', 2.98));                                            // "three times"
+    dLater(ans, [3, 4], m('a', 4.15));                                         // "forty"
+    dLater(ans, [5], m('a', 4.5));                                             // "plus"
+    dLater(ans, [6, 7], m('a', 4.83));                                         // "six"
+    dNudge(S.ef.row[2], m('a', 4.15)); dNudge(S.ef.row[4], m('a', 4.83));
+  }],
+
+  ['test', 'On the test', (m) => {
+    const p = panel(0);
+    // the IAB's own question (W19's shape), the choices as the site shows them, the area model beside them
+    dAsk(p, 'Which expression is equal to 3 × 46?', 150, 150, .3, { w: 1300 });
+    const ch = dChoices(p, [
+      ['3 + (40 + 6)'],
+      ['(3 × 40) + 6'],
+      ['3 × (40 + 6)'],
+      ['3 × 40 × 6'],
+    ], 150, 250, .4, { w: 700 });
+    const A = dArea(p, { x: 1010, y: 330, w: 470, h: 170, side: [3], top: [40, 6], size: 44, labelSize: 52 });
+    A.frame(.4, .6);
+    A.sideLab(0, .6); A.topLab(0, .6); A.topLab(1, .6);
+    A.cell(0, 0, .8); A.cell(0, 1, .8);
+    // "On the test, you pick this expression."
+    ch[2].glow(m('t', 1.46));                                                  // "this"
+    // "You do not need the product."
+    dText(p, 'You do not need the product.', 1245, 640, m('np'), { size: 40, fill: INK, weight: 700 });
+  }],
+
+  ['mistake', 'Watch out', (m) => {
+    const p = panel(0);
+    dWatchOut(p, .3, 800, 110);
+    const A = dArea(p, { x: 190, y: 330, w: 600, h: 290, side: [3], top: [40, 6], size: 60, labelSize: 64 });
+    A.frame(.3, .5);
+    A.sideLab(0, .4); A.topLab(0, .4); A.topLab(1, .4);
+    A.cell(0, 0, .5); A.cell(0, 1, .5);
+    // "Three times forty, plus six, leaves out a part." — the mistake in red: the 6 was never multiplied
+    const R = 1180;
+    const bad = dMistake(p, ['(3 × ', { t: '40', fill: TENS }, ')', ' + ', { t: '6', fill: RED }], R, 610, m('w'), null, { size: 80, strike: [4, 4], strikeAt: m('w', 2.41) });
+    dLater(bad, [3, 4], m('w', 1.29));                                         // "plus six"
+    A.ring(0, 0, m('w', .4), BLUE);                                            // "three times forty"
+    A.flash(0, 1, m('w', 2.41), { off: m('each', .6) });                       // "leaves out a part"
+    dText(p, 'Leaves out a part.', R, 740, m('w', 2.41), { size: 46, fill: RED, weight: 700 });
+    // "Three times each part." — the right one, above the mistake
+    dRight(p, ['3 × ', '(', { t: '40', fill: TENS }, ' + ', { t: '6', fill: ONES }, ')'], R - 40, 380, m('each'), { size: 80 });
+    A.ring(0, 1, m('each', .78), ONES);                                        // "each part"
+  }, { minDur: 8.2 }],
+
+  ['wrap', 'Remember', rememberBeat([['Expanded form.', 'w1'], ['Label the area model.', 'w2'], ['Match the expression.', 'w3']])],
+].map(([id, title, run, extra]) => ({ id, title, run, ...extra }));
+
+boot();
+</script>
+</body>
+</html>

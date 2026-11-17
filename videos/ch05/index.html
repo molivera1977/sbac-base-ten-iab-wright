@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Round · SBAC IAB Base Ten</title>
+<link rel="stylesheet" href="../lib/engine.css?v=fa68c4a8">
+<link rel="expect" href="#bar" blocking="render">
+</head>
+<body>
+<script src="../lib/engine.js?v=d6885892"></script>
+<script src="../lib/nbt.js?v=82e3c77d"></script>
+<script src="../lib/embed.js?v=3bc13d2d"></script>
+<script src="audio/en/timings.js?v=4fbc758e"></script>
+<script>
+'use strict';
+/* Mr. O's 4th grade · SBAC Base Ten IAB · video 5: ROUND, the IAB's typed kind and its shape (nearest thousand, a 9 that
+   carries: "Round 269,798 to the nearest thousand. Type the number." — spots 5 and 11; spot 5's nearest ten uses the same
+   three steps). Practice: 🎬 Show me / Watch how at spots 5 and 11; Warm-Up Watch "Round".
+     Round 649,804 to the nearest thousand · the thousands digit: 9 · the digit to its right: 8, 5 or more: round up ·
+     9 thousands + 1 thousand = 10 thousands: carry 1 to the ten thousands, 49 becomes 50 · the places after it become
+     zeros → 650,000 → type it.
+   Numbers changed from VIDEOS.md (11/14): its 659,804 → 660,000 put "59 → 60" on screen, and 59 is a real test number.
+   The trap: rounding up a 9 without the carry — 640,000. The place being rounded on a yellow band, its label blue. */
+const CHAPTER = { number: 5, title: 'Round', minutes: 1, language: 'en' };
+
+const COLS = [250, 360, 470, 620, 730, 840], COMMA_X = 528, N_Y = 440, R_Y = 630, NSZ = 130;
+const NX = 1230;                                         // the notes at the right
+const dig = (p, d, k, y, t, { size = NSZ, fill = INK } = {}) => dLine(p, [{ t: String(d), fill }], COLS[k], y, t, { size });
+
+const BEATS = [
+  ['intro', 'Round', titleBeat('Round', 'Find the digit. Look right.')],
+
+  ['steps', 'Look right', (m) => {
+    const p = panel(0);
+    // "Round six hundred forty-nine thousand, eight hundred four, to the nearest thousand." — the IAB's question
+    dAsk(p, 'Round 649,804 to the nearest thousand.', 150, 130, .3, { w: 1300, size: 50 });
+    const top = S.top = '649804'.split('').map((d, k) => dig(p, d, k, N_Y, .5 + k * .08));
+    dLine(p, [','], COMMA_X, N_Y, .5, { size: NSZ });
+    // the typing box, as the site shows it
+    dText(p, '✏️ Your answer:', 1130, 820, .3, { size: 40, fill: BLUE, weight: 700, anchor: 'end' });
+    S.box = dEntry(p, 1150, 820, .3, { w: 340, size: 76 });
+    // "Find the thousands digit. Nine."
+    const band = mk('rect', { x: COLS[2] - 60, y: 205, width: 120, height: R_Y - 205 + 40, rx: 22, fill: SUN_BG }, p);
+    p.insertBefore(band, p.firstChild); put(band, { o: 0 }); show(band, m('s1', .6), .4);
+    dText(p, 'thousands', COLS[2], 250, m('s1', .6), { size: 40, fill: BLUE, weight: 700 });
+    dNudge(top[2].row[0], m('nine'));
+    // "Look at the digit to its right. Eight."
+    const ring = mk('circle', { cx: COLS[3], cy: N_Y - NSZ * .36, r: 58, fill: 'none', stroke: ORANGE, 'stroke-width': 7 }, p);
+    put(ring, { o: 0 }); show(ring, m('s2', 1.17), .3);
+    dNudge(top[3].row[0], m('eight'));
+    // "Eight is five or more. Round up."
+    const n1 = dLine(p, ['8', ' is ', '5 or more.'], NX, 340, m('five'), { size: 52 });
+    dLater(n1, [1, 2], m('five', .42));
+    dText(p, 'Round up.', NX, 410, m('up'), { size: 48, fill: BLUE, weight: 800 });
+    // "Nine thousands plus one thousand is ten thousands."
+    const n2 = dLine(p, ['9 thousands', ' + ', '1 thousand'], NX, 520, m('c1'), { size: 50 });
+    dLater(n2, [1, 2], m('c1', .98));
+    const n3 = dLine(p, [' = ', '10 thousands'], NX, 590, m('c1', 2.24), { size: 50 });
+    // "Carry one to the ten thousands." — the 1 goes up over the 4
+    const carry = dig(p, 1, 1, 318, m('c2', .4), { size: 56, fill: ORANGE });
+    dFly(carry, [0], [n3.row[1]._px - 90, 590], m('c2', .4), .9);
+    // "Forty-nine becomes fifty." — the new number starts under the old one
+    dig(p, 6, 0, R_Y, m('c3'));
+    const f = dig(p, 5, 1, R_Y, m('c3', .9), { fill: ORANGE }), z = dig(p, 0, 2, R_Y, m('c3', 1.37), { fill: ORANGE });
+    const n4 = dLine(p, ['49', ' → ', { t: '50', fill: ORANGE }], NX, 710, m('c3'), { size: 72 });
+    dLater(n4, [1, 2], m('c3', .86));
+    dNudge(top[1].row[0], m('c3')); dNudge(top[2].row[0], m('c3', .2));
+  }],
+
+  ['answer', 'Type the number', (m) => {
+    const p = S.panel;
+    // "The places after it become zeros."
+    dLine(p, [','], COMMA_X, R_Y, m('z', .9), { size: NSZ });
+    [3, 4, 5].forEach((k, n) => dig(p, 0, k, R_Y, m('z', .9 + n * .25)));
+    // "Six hundred fifty thousand."
+    const glow = mk('rect', { x: COLS[0] - 70, y: R_Y - 118, width: COLS[5] - COLS[0] + 140, height: 150, rx: 26, fill: 'none', stroke: ORANGE, 'stroke-width': 6 }, p);
+    put(glow, { o: 0 }); show(glow, m('a'), .4);
+    // "Type the number."
+    const e = S.box.type('650,000', m('type', .3));
+    dFly(e, [0], [(COLS[0] + COLS[5]) / 2, R_Y], m('type', .3), .9);
+  }],
+
+  ['mistake', 'Watch out', (m) => {
+    const p = panel(0);
+    dWatchOut(p, .3, 800, 110);
+    // "Rounding up a nine carries one."
+    dText(p, 'Rounding up a 9 carries 1.', 800, 240, m('w'), { size: 50, fill: INK, weight: 700 });
+    // "Six hundred fifty thousand is right."
+    dRight(p, ['649,804', ' → ', { t: '650,000', fill: ORANGE }], 760, 420, m('r'), { size: 84 });
+    // "Six hundred forty thousand is not it."
+    dMistake(p, ['649,804', ' → ', { t: '640,000', fill: RED }], 800, 640, m('not'), null, { size: 84, strike: [2, 2], strikeAt: m('not', 1.96) });
+  }, { minDur: 11.2 }],
+
+  ['wrap', 'Remember', rememberBeat([['Find the digit.', 'w1'], ['Look right.', 'w2'], ['5 or more: round up. A 9 carries.', 'w3']])],
+].map(([id, title, run, extra]) => ({ id, title, run, ...extra }));
+
+boot();
+</script>
+</body>
+</html>

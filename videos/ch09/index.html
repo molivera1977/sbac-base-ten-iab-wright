@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fix the claim · SBAC IAB Base Ten</title>
+<link rel="stylesheet" href="../lib/engine.css?v=fa68c4a8">
+<link rel="expect" href="#bar" blocking="render">
+</head>
+<body>
+<script src="../lib/engine.js?v=d6885892"></script>
+<script src="../lib/nbt.js?v=82e3c77d"></script>
+<script src="../lib/embed.js?v=3bc13d2d"></script>
+<script src="audio/en/timings.js?v=42063686"></script>
+<script>
+'use strict';
+/* Mr. O's 4th grade · SBAC Base Ten IAB · video 9: FIX THE CLAIM, the IAB's "which change makes it right every time" kind
+   ('Jake says, "Two 2-digit numbers always make a 3-digit product." … Which change makes Jake right every time?' —
+   spot 13). Practice: 🎬 Show me / Watch how at spot 13 (no Warm-Up Watch card).
+     Sam: "Two 2-digit numbers always make a 4-digit product." · test the smallest: 10 × 10 = 100, 3 digits: not always
+     right · try "Both numbers are greater than 42.": the smallest you can use, 43 × 43 = 1,849 (4 digits), the biggest,
+     99 × 99 = 9,801 (4 digits) — both work → that choice.
+   Numbers changed from VIDEOS.md (11/14): its 40 / 41 / 70 are on site questions → greater than 42 (43 × 43 = 1,849) and
+   less than 77; the other two choices (less than 55, less than 91) are on no site question either. 10 × 10 and 99 × 99
+   are the method itself (tools/check_videos.js CH09_METHOD). The trap: "less than 77" still lets in 10 × 10. */
+const CHAPTER = { number: 9, title: 'Fix the claim', minutes: 1, language: 'en' };
+
+const CLAIM = '"Two 2-digit numbers always make a 4-digit product."';
+// a white card of one or more lines (the site's question card, left-aligned)
+const qCard = (p, lines, x, y, w, t0, { size = 44, gap = 1.4 } = {}) => {
+  const g = G(p, { o: 0 });
+  const h = size * (gap * (lines.length - 1) + 1.75);
+  mk('rect', { x, y: y - size * 1.15, width: w, height: h, rx: 22, fill: '#ffffff', stroke: '#c9d3dc', 'stroke-width': 3 }, g);
+  lines.forEach(([str, weight], i) => T(g, str, { x: x + 34, y: y + i * size * gap, size, fill: INK, weight: weight || 600 }));
+  show(g, t0, .5);
+  return g;
+};
+const cross = (p, x, y, t, s = 24) => draw(path(p, `M${x - s} ${y - s}L${x + s} ${y + s}M${x + s} ${y - s}L${x - s} ${y + s}`, { stroke: RED, 'stroke-width': 9 }, { d: 0 }), t, .35);
+
+const BEATS = [
+  ['intro', 'Fix the claim', titleBeat('Fix the claim', 'Test the smallest. Test the biggest.')],
+
+  ['claim', 'Is it always right?', (m) => {
+    const p = panel(0);
+    // "Sam says, two 2-digit numbers always make a 4-digit product."
+    qCard(p, [['Sam says:', 800], [CLAIM]], 100, 150, 1400, .3, { size: 48 });
+    // "Is Sam right?"
+    dText(p, 'Is Sam right?', 800, 360, m('q'), { size: 56, fill: BLUE, weight: 800 });
+    // "Test the smallest. Ten times ten is one hundred."
+    dText(p, 'Test the smallest.', 800, 470, m('s'), { size: 44, fill: TEAL, weight: 700 });
+    const t = dLine(p, ['10', ' × ', '10', ' = ', '100'], 800, 590, m('a'), { size: 96 });
+    dLater(t, [1, 2], m('a', .33)); dLater(t, [3, 4], m('a', 1.18));
+    // "That has 3 digits."
+    dText(p, '3 digits', t.row[4]._px, 680, m('b', .5), { size: 44, fill: RED, weight: 700 });
+    // "Sam is not always right."
+    cross(p, 800 + t.row.w / 2 + 60, 556, m('c', .3));
+    dText(p, 'Sam is not always right.', 800, 800, m('c', .3), { size: 48, fill: INK, weight: 700 });
+  }],
+
+  ['choose', 'Test both ends', (m) => {
+    const p = panel(0);
+    // "Which change makes Sam right every time?" — the IAB's question and its four choices
+    qCard(p, [['Sam says, ' + CLAIM], ['Which change makes Sam right every time?', 800]], 80, 95, 1440, .3, { size: 40 });
+    const ch = dChoices(p, [
+      ['Both numbers are less than 77.'],
+      ['Both numbers are greater than 42.'],
+      ['Both numbers are less than 91.'],
+      ['Both numbers are less than 55.'],
+    ], 80, 250, .4, { w: 810, h: 92, gap: 22, size: 40 });
+    // "Try, both numbers are greater than forty-two."
+    const ring = mk('rect', { x: 80 - 8, y: 250 + 114 - 8, width: 826, height: 108, rx: 20, fill: 'none', stroke: BLUE, 'stroke-width': 6 }, p);
+    put(ring, { o: 0 }); show(ring, m('try', .6), .3);
+    const X = 1225;
+    // "Test the smallest you can use. Forty-three times forty-three is one thousand, eight hundred forty-nine. 4 digits!"
+    dText(p, 'Test the smallest.', X, 320, m('sm'), { size: 42, fill: TEAL, weight: 700 });
+    const a = dLine(p, ['43', ' × ', '43', ' = ', '1,849'], X, 410, m('a'), { size: 72 });
+    dLater(a, [1, 2], m('a', .79)); dLater(a, [3, 4], m('a', 2.16));
+    dText(p, '4 digits', X, 476, m('f1'), { size: 42, fill: '#2e7d32', weight: 800 });
+    const k1 = dTick(p, X + a.row.w / 2 + 50, 384, m('f1', .2));
+    // "Test the biggest. Ninety-nine times ninety-nine is nine thousand, eight hundred one. 4 digits!"
+    dText(p, 'Test the biggest.', X, 580, m('big'), { size: 42, fill: TEAL, weight: 700 });
+    const b = dLine(p, ['99', ' × ', '99', ' = ', '9,801'], X, 670, m('b'), { size: 72 });
+    dLater(b, [1, 2], m('b', .77)); dLater(b, [3, 4], m('b', 1.9));
+    dText(p, '4 digits', X, 736, m('f2'), { size: 42, fill: '#2e7d32', weight: 800 });
+    dTick(p, X + b.row.w / 2 + 50, 644, m('f2', .2));
+    // "Both work. That change makes Sam right every time."
+    dNudge(a.row[4], m('both')); dNudge(b.row[4], m('both', .3));
+    hide(ring, m('ok', 1.2), .3);
+    ch[1].glow(m('ok', 1.41));
+  }],
+
+  ['mistake', 'Watch out', (m) => {
+    const p = panel(0);
+    dWatchOut(p, .3, 800, 110);
+    // the right choice above (from before)
+    dRight(p, ['Both numbers are greater than 42.'], 760, 270, m('w'), { size: 60 });
+    // "Less than seventy-seven still lets in ten times ten."
+    dMistake(p, [{ t: 'Both numbers are less than 77.', fill: RED }], 800, 470, m('w'), null, { size: 60, strike: [0, 0], strikeAt: m('x', 1.2) });
+    const t = dLine(p, ['10', ' × ', '10', ' = ', '100'], 800, 640, m('w', 2.29), { size: 84 });
+    dLater(t, [3, 4], m('x'));
+    // "One hundred has 3 digits."
+    dText(p, '3 digits', t.row[4]._px, 724, m('x', 1.02), { size: 44, fill: RED, weight: 700 });
+  }, { minDur: 9.6 }],
+
+  ['wrap', 'Remember', rememberBeat([['Test the smallest.', 'w1'], ['Test the biggest.', 'w2'], ['Both must work.', 'w3']])],
+].map(([id, title, run, extra]) => ({ id, title, run, ...extra }));
+
+boot();
+</script>
+</body>
+</html>

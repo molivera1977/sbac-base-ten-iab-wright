@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Area model: two 2-digit numbers · SBAC IAB Base Ten</title>
+<link rel="stylesheet" href="../lib/engine.css?v=fa68c4a8">
+<link rel="expect" href="#bar" blocking="render">
+</head>
+<body>
+<script src="../lib/engine.js?v=d6885892"></script>
+<script src="../lib/nbt.js?v=82e3c77d"></script>
+<script src="../lib/embed.js?v=3bc13d2d"></script>
+<script src="audio/en/timings.js?v=fb3fb5fe"></script>
+<script>
+'use strict';
+/* Mr. O's 4th grade · SBAC Base Ten IAB · video 8: AREA MODEL, TWO 2-DIGIT NUMBERS — THE SET-UP (spots 6 and 14:
+   "Which expression is equal to 11 × 24?"). Practice: 🎬 Show me / Watch how at spots 6 and 14; Warm-Up Watch
+   "Area model: two 2-digit numbers". His words 11/14: "the iab focuses on setting the problem up as oppose to
+   actually solving it" · "the area modeling is basically multipling using expanded form". No product anywhere.
+     Which expression is equal to 13 × 25? · 13 = 10 + 3 · 25 = 20 + 5 · area model: 10 and 3 on the side, 20 and 5
+     on top · four parts 10 × 20 | 10 × 5 | 3 × 20 | 3 × 5 → 13 × 25 = (10 + 3) × (20 + 5) → the matching choice.
+   The traps (VIDEOS.md, the site's own wrong choices): (10 × 20) + (3 × 5) has only two parts; (10 + 3) + (20 + 5)
+   adds. Tens blue, ones green all the way down. */
+const CHAPTER = { number: 8, title: 'Area model: two 2-digit numbers', minutes: 1, language: 'en' };
+
+const LX = 150, E1_Y = 370, E2_Y = 510, ANS_Y = 835;
+const AREA = { x: 860, y: 300, w: 640, h: 420, side: [10, 3], top: [20, 5], size: 56 };
+// the four answer choices: the site's own shapes at spots 6 and 14 (gen_nbt.js), the right one third
+const PLUS = { t: ' + ', fill: RED };
+const CHOICES = [
+  ['(10 + 3)', ' + ', '(20 + 5)'],
+  ['(10 × 20)', ' + ', '(3 × 5)'],
+  ['(10 + 3)', ' × ', '(20 + 5)'],
+  ['(10 × 3)', ' + ', '(20 × 5)'],
+];
+// the set-up written in colour: (10 + 3) × (20 + 5)
+const SETUP = ['(', { t: '10', fill: TENS }, ' + ', { t: '3', fill: ONES }, ')', ' × ', '(', { t: '20', fill: TENS }, ' + ', { t: '5', fill: ONES }, ')'];
+
+const BEATS = [
+  ['intro', 'Area model: two 2-digit numbers', titleBeat('Area model: two 2-digit numbers', 'Set up the problem.')],
+
+  ['steps', 'Set it up', (m) => {
+    const p = panel(0);
+    // "Which expression is equal to thirteen times twenty-five?" — the IAB's question
+    dAsk(p, 'Which expression is equal to 13 × 25?', 150, 140, .3, { w: 1300, size: 50 });
+    // "Write each factor in expanded form. Thirteen is ten plus three. Twenty-five is twenty plus five."
+    const e1 = S.e1 = dLine(p, ['13', ' = ', { t: '10', fill: TENS }, ' + ', { t: '3', fill: ONES }], LX + 20, E1_Y, m('e1'), { size: 80, anchor: 'start' });
+    dLater(e1, [1, 2], m('e1', 1.0));                                          // "is ten"
+    dLater(e1, [3], m('e1', 1.34));                                            // "plus"
+    dLater(e1, [4], m('e1', 1.66));                                            // "three"
+    const e2 = S.e2 = dLine(p, ['25', ' = ', { t: '20', fill: TENS }, ' + ', { t: '5', fill: ONES }], LX + 20, E2_Y, m('e2'), { size: 80, anchor: 'start' });
+    dLater(e2, [1, 2], m('e2', 1.04));                                         // "is twenty"
+    dLater(e2, [3], m('e2', 1.48));                                            // "plus"
+    dLater(e2, [4], m('e2', 1.8));                                             // "five"
+    // "Label the area model. Ten and three on the side. Twenty and five on top." — the labels fly in from the lines
+    const A = S.A = dArea(p, AREA);
+    A.frame(m('s2', .1));
+    const sl = [A.sideLab(0, m('side')), A.sideLab(1, m('side', .68))];
+    dFly(sl[0], [0], [e1.row[2]._px, e1.row.y], m('side'), .8);               // "Ten"
+    dFly(sl[1], [0], [e1.row[4]._px, e1.row.y], m('side', .68), .8);          // "three"
+    const tl = [A.topLab(0, m('top')), A.topLab(1, m('top', .81))];
+    dFly(tl[0], [0], [e2.row[2]._px, e2.row.y], m('top'), .8);                // "Twenty"
+    dFly(tl[1], [0], [e2.row[4]._px, e2.row.y], m('top', .81), .8);           // "five"
+    // "There are four parts. Ten times twenty. Ten times five. Three times twenty. Three times five."
+    [[0, 0], [0, 1], [1, 0], [1, 1]].forEach(([i, j], k) => A.tint(i, j, m('s3', .38 + k * .15)));   // "four parts"
+    A.cell(0, 0, m('c1'), { tint: false });
+    A.cell(0, 1, m('c2'), { tint: false });
+    A.cell(1, 0, m('c3'), { tint: false });
+    A.cell(1, 1, m('c4'), { tint: false });
+  }],
+
+  ['answer', 'The set-up', (m) => {
+    const p = S.panel, A = S.A;
+    // "So thirteen times twenty-five is equal to, ten plus three, times, twenty plus five."
+    const ans = dLine(p, ['13 × 25', ' = ', ...SETUP], 800, ANS_Y, m('a', .5), { size: 76, card: ORANGE_BG });
+    dLater(ans, [1], m('a', 2.07));                                            // "is equal to"
+    dLater(ans, [2, 3], m('a', 3.35));                                         // "ten"
+    dLater(ans, [4], m('a', 3.65));                                            // "plus"
+    dLater(ans, [5, 6], m('a', 3.99));                                         // "three"
+    dLater(ans, [7], m('a', 4.66));                                            // "times"
+    dLater(ans, [8, 9], m('a', 5.28));                                         // "twenty"
+    dLater(ans, [10], m('a', 5.65));                                           // "plus"
+    dLater(ans, [11, 12], m('a', 6.04));                                       // "five"
+    dNudge(S.e1.row[2], m('a', 3.35)); dNudge(S.e1.row[4], m('a', 3.99));      // the side's parts
+    dNudge(S.e2.row[2], m('a', 5.28)); dNudge(S.e2.row[4], m('a', 6.04));      // the top's parts
+  }],
+
+  ['choose', 'Pick the match', (m) => {
+    const p = panel(0);
+    // the IAB's question with its four choices (the site's own shapes), the area model beside them
+    dAsk(p, 'Which expression is equal to 13 × 25?', 150, 140, .3, { w: 1300, size: 50 });
+    const ch = dChoices(p, CHOICES, 150, 235, .4, { w: 760, size: 52 });
+    const A = dArea(p, { x: 1060, y: 320, w: 470, h: 320, side: [10, 3], top: [20, 5], size: 44, labelSize: 52, min: .6 });
+    A.frame(.4, .6);
+    A.sideLab(0, .6); A.sideLab(1, .6); A.topLab(0, .6); A.topLab(1, .6);
+    [[0, 0], [0, 1], [1, 0], [1, 1]].forEach(([i, j]) => A.cell(i, j, .7));
+    // "You do not need the product."
+    dText(p, 'You do not need the product.', 1255, 730, m('np'), { size: 40, fill: INK, weight: 700 });
+    // "Find the expression that matches the set-up."
+    ch[2].glow(m('find', 1.46));                                               // "matches"
+  }],
+
+  ['mistake', 'Watch out', (m) => {
+    const p = panel(0);
+    dWatchOut(p, .3, 800, 90);
+    const A = dArea(p, { x: 170, y: 290, w: 560, h: 400, side: [10, 3], top: [20, 5], size: 50, labelSize: 60 });
+    A.frame(.3, .5);
+    A.sideLab(0, .4); A.sideLab(1, .4); A.topLab(0, .4); A.topLab(1, .4);
+    A.cell(0, 0, .5); A.cell(0, 1, .5); A.cell(1, 0, .5); A.cell(1, 1, .5);
+    const R = 1190;
+    // the right one on top (the set-up from before)
+    const right = dRight(p, SETUP, R - 40, 250, .5, { size: 66 });
+    // "Ten times twenty, plus three times five, has only two parts. The area model has four."
+    const bad1 = dMistake(p, ['(10 × 20)', ' + ', '(3 × 5)'], R, 450, m('w'), null, { size: 66, strike: [0, 2], strikeAt: m('w', 3.12) });
+    dLater(bad1, [1], m('w', 1.46)); dLater(bad1, [2], m('w', 1.82));         // "plus three times five"
+    A.ring(0, 0, m('w'), BLUE); A.ring(1, 1, m('w', 1.82), BLUE);              // the two parts it has
+    dText(p, 'Only two parts.', R, 545, m('w', 3.12), { size: 42, fill: RED, weight: 700 });
+    A.flash(0, 1, m('w', 3.86)); A.flash(1, 0, m('w', 3.86));                  // "two parts": the two it leaves out
+    // "Also, ten plus three, plus, twenty plus five, adds. Keep the times sign between the factors."
+    const bad2 = dMistake(p, ['(10 + 3)', PLUS, '(20 + 5)'], R, 680, m('also', .95), null, { size: 66, strike: [0, 2], strikeAt: m('also', 4.36) });
+    dLater(bad2, [1], m('also', 2.3)); dLater(bad2, [2], m('also', 2.94));    // "plus, twenty plus five"
+    dText(p, 'Adds.', R, 775, m('also', 4.36), { size: 42, fill: RED, weight: 700 });
+    dNudge(right.row[5], m('keep', .38));                                      // "the times sign"
+  }, { minDur: 17.2 }],
+
+  ['wrap', 'Remember', rememberBeat([['Expanded form.', 'w1'], ['Label the area model.', 'w2'], ['Four parts. Keep the ×.', 'w3']])],
+].map(([id, title, run, extra]) => ({ id, title, run, ...extra }));
+
+boot();
+</script>
+</body>
+</html>

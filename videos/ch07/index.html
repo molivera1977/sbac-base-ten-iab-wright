@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Partial products · SBAC IAB Base Ten</title>
+<link rel="stylesheet" href="../lib/engine.css?v=fa68c4a8">
+<link rel="expect" href="#bar" blocking="render">
+</head>
+<body>
+<script src="../lib/engine.js?v=d6885892"></script>
+<script src="../lib/nbt.js?v=82e3c77d"></script>
+<script src="../lib/embed.js?v=3bc13d2d"></script>
+<script src="audio/en/timings.js?v=489a7683"></script>
+<script>
+'use strict';
+/* Mr. O's 4th grade · SBAC Base Ten IAB · video 7: PARTIAL PRODUCTS (2-digit × tens), the IAB's typed kind
+   ("56 × 20 = □. Type the product." — spot 7). Practice: 🎬 Show me / Watch how at spot 7; Warm-Up Watch
+   "Partial products". His words 11/14: "for the multiplication we are going to focus on area modeling and partial
+   product". HMH's: "Write each factor in expanded form" / "Add the partial products".
+     37 × 20 = □ · 37 = 30 + 7 · area model: 30 and 7 on the side, 20 on top · 30 × 20 = 600 | 7 × 20 = 140
+     → 600 + 140 = 740 → type 740 in the box.
+   The trap (VIDEOS.md): stopping after one part — 600 is only 30 × 20. 30 / 600 blue, 7 / 140 green all the way. */
+const CHAPTER = { number: 7, title: 'Partial products', minutes: 1, language: 'en' };
+
+const PX = 150, PROB_Y = 170, EF_Y = 390, SUM_Y = 830;
+const AREA = { x: 880, y: 330, w: 560, h: 380, side: [30, 7], top: [20], size: 56 };
+
+const BEATS = [
+  ['intro', 'Partial products', titleBeat('Partial products', 'Multiply each part. Then add.')],
+
+  ['steps', 'Multiply each part', (m) => {
+    const p = panel(0);
+    // "Here is thirty-seven times twenty." — the IAB's own shape: 37 × 20 = □ with the box to type in
+    const prob = S.prob = dLine(p, ['37', ' × ', '20', ' = '], PX, PROB_Y, .3, { size: 96, anchor: 'start' });
+    const box = S.box = dEntry(p, PX + prob.row.w + 14, PROB_Y, .3, { w: 270, size: 96 });
+    const card = dCard(p, PX - 52, PROB_Y - 122, prob.row.w + 14 + 270 + 104, 172, BLUE_BG, .3);
+    p.insertBefore(card, p.firstChild);
+    // "Write thirty-seven in expanded form. Thirty plus seven."
+    dNudge(prob.row[0], m('s1', .38));                                         // "thirty-seven"
+    const ef = S.ef = dLine(p, ['37', ' = ', { t: '30', fill: TENS }, ' + ', { t: '7', fill: ONES }], PX + 20, EF_Y, m('s1', .38), { size: 80, anchor: 'start' });
+    dLater(ef, [1, 2], m('ef'));                                               // "Thirty"
+    dLater(ef, [3], m('ef', .48));                                             // "plus"
+    dLater(ef, [4], m('ef', .82));                                             // "seven"
+    // "Multiply each part by twenty." — the area model: the parts on the side, 20 on top
+    const A = S.A = dArea(p, AREA);
+    A.frame(m('s2', .1));
+    const s0 = A.sideLab(0, m('s2', .77)), s1 = A.sideLab(1, m('s2', 1.08));   // "each part"
+    dFly(s0, [0], [ef.row[2]._px, ef.row.y], m('s2', .77), .8);
+    dFly(s1, [0], [ef.row[4]._px, ef.row.y], m('s2', 1.08), .8);
+    const t0 = A.topLab(0, m('s2', 1.62));                                    // "twenty"
+    dFly(t0, [0], [prob.row[2]._px, prob.row.y], m('s2', 1.62), .8);
+    // "Thirty times twenty is six hundred."
+    const c0 = S.c0 = A.cell(0, 0, m('p1'), { product: true });
+    dLater(c0, [3, 4], m('p1', 1.52));                                         // "six hundred"
+    // "Seven times twenty is one hundred forty."
+    const c1 = S.c1 = A.cell(1, 0, m('p2'), { product: true });
+    dLater(c1, [3, 4], m('p2', 1.82));                                         // "one hundred forty"
+    // "Add the partial products. Six hundred plus one hundred forty is seven hundred forty."
+    dNudge(c0.row[4], m('s3', .45)); dNudge(c1.row[4], m('s3', .75));         // "partial products"
+    const sum = S.sum = dLine(p, [{ t: '600', fill: TENS }, ' + ', { t: '140', fill: ONES }, ' = ', '740'], 800, SUM_Y, m('sum'), { size: 84 });
+    dFly(sum, [0], [c0.row[4]._px, c0.row.y], m('sum'), .8);                  // "Six hundred"
+    dLater(sum, [1], m('sum', .92));                                           // "plus"
+    dLater(sum, [2], m('sum', 1.35)); dFly(sum, [2], [c1.row[4]._px, c1.row.y], m('sum', 1.35), .8);   // "one hundred forty"
+    dLater(sum, [3, 4], m('sum', 2.87));                                       // "is seven hundred forty"
+  }],
+
+  ['answer', 'Type it', (m) => {
+    // "Type seven hundred forty." — the sum's 740 goes into the box
+    const e = S.box.type('740', m('a', .44));
+    dFly(e, [0], [S.sum.row[4]._px, S.sum.row.y], m('a', .44), .8);
+    dNudge(S.sum.row[4], m('a', .3));
+  }],
+
+  ['mistake', 'Watch out', (m) => {
+    const p = panel(0);
+    dWatchOut(p, .3, 800, 110);
+    const A = dArea(p, { x: 230, y: 300, w: 520, h: 420, side: [30, 7], top: [20], size: 54, labelSize: 60 });
+    A.frame(.3, .5);
+    A.sideLab(0, .4); A.sideLab(1, .4); A.topLab(0, .4);
+    const c0 = A.cell(0, 0, .5, { product: true }); A.cell(1, 0, .5, { product: true });
+    const R = 1180;
+    // "Do not stop after one part." — the right one first, then the part that would be left out
+    dRight(p, ['37 × 20', ' = ', '740'], R - 40, 380, m('w'), { size: 80 });
+    A.flash(1, 0, m('w', .47));                                                // "stop"
+    A.ring(0, 0, m('w', 1.15), BLUE);                                          // "one part"
+    // "Six hundred is only thirty times twenty."
+    dMistake(p, ['37 × 20', ' = ', { t: '600', fill: RED }], R, 600, m('only'), null, { size: 80, strike: [2, 2], strikeAt: m('only', 1.29) });
+    dText(p, '600 is only 30 × 20.', R, 730, m('only', 1.29), { size: 46, fill: RED, weight: 700 });
+    dNudge(c0.row[0], m('only', 1.73)); dNudge(c0.row[2], m('only', 2.47));   // "thirty times twenty"
+  }, { minDur: 8.6 }],
+
+  ['wrap', 'Remember', rememberBeat([['Expanded form.', 'w1'], ['Multiply each part.', 'w2'], ['Add the partial products.', 'w3']])],
+].map(([id, title, run, extra]) => ({ id, title, run, ...extra }));
+
+boot();
+</script>
+</body>
+</html>

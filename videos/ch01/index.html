@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Add big numbers · SBAC IAB Base Ten</title>
+<link rel="stylesheet" href="../lib/engine.css?v=fa68c4a8">
+<link rel="expect" href="#bar" blocking="render">
+</head>
+<body>
+<script src="../lib/engine.js?v=d6885892"></script>
+<script src="../lib/nbt.js?v=82e3c77d"></script>
+<script src="../lib/embed.js?v=3bc13d2d"></script>
+<script src="audio/en/timings.js?v=577db274"></script>
+<script>
+'use strict';
+/* Mr. O's 4th grade · SBAC Base Ten IAB · video 1: ADD BIG NUMBERS, the IAB's typed kind ("6,286 + 192 = □. Type the
+   sum." — spots 1 and 4). Practice: 🎬 Show me / Watch how at spots 1 and 4; Warm-Up Watch "Add big numbers".
+     6,357 + 2,486 = □ · line up the places (place names above) · ones 7 + 6 = 13: write 3, regroup 1 ten ·
+     tens 5 + 8 + 1 = 14: write 4, regroup 1 hundred · hundreds 3 + 4 + 1 = 8 · thousands 6 + 2 = 8 → type 8,843.
+   The trap (VIDEOS.md): forgetting the 1 you regroup — 8,733. Ones green, tens blue, hundreds purple all the way down
+   (a regrouped 1 takes the colour of the place it goes to); thousands ink. */
+const CHAPTER = { number: 1, title: 'Add big numbers', minutes: 1, language: 'en' };
+
+const PX = 150, PROB_Y = 170;
+const COLS = [300, 500, 700, 900];                       // thousands, hundreds, tens, ones
+const PLACE = ['thousands', 'hundreds', 'tens', 'ones'];
+const PCOL = [INK, HUNS, TENS, ONES], PBG = ['#e5e9ee', HUNS_BG, TENS_BG, ONES_BG];
+const LAB_Y = 318, CARRY_Y = 402, R1_Y = 500, R2_Y = 622, LINE_Y = 664, ANS_Y = 785, SZ = 100;
+const FX = 1290, FY = [420, 530, 640, 750];              // the facts, one line per place, at the right
+
+// one digit in a place column (k = 0 thousands … 3 ones)
+const digit = (p, d, k, y, t, { size = SZ, fill = PCOL[k] } = {}) => dLine(p, [{ t: String(d), fill }], COLS[k], y, t, { size });
+// the comma between the thousands and the hundreds
+const comma = (p, y, t, size = SZ) => dLine(p, [','], COLS[0] + size * .5, y, t, { size });
+// a soft band down one place's column while Ava works it
+const band = (p, k, t0, t1) => {
+  const r = mk('rect', { x: COLS[k] - 88, y: LAB_Y - 48, width: 176, height: ANS_Y - LAB_Y + 78, rx: 22, fill: PBG[k] }, p);
+  p.insertBefore(r, p.firstChild);
+  put(r, { o: 0 }); show(r, t0, .4);
+  if (t1 != null) hide(r, t1, .4);
+  return r;
+};
+
+const BEATS = [
+  ['intro', 'Add big numbers', titleBeat('Add big numbers', 'Line up the places.')],
+
+  ['steps', 'Line up the places', (m) => {
+    const p = panel(0);
+    // "Here is six thousand three hundred fifty-seven, plus two thousand four hundred eighty-six." — 6,357 + 2,486 = □
+    const prob = S.prob = dLine(p, ['6', ',', '3', '5', '7', ' + ', '2', ',', '4', '8', '6', ' = '], PX, PROB_Y, .3, { size: 88, anchor: 'start' });
+    dLater(prob, [5], m('s1', -3.27));                                         // "plus"
+    dLater(prob, [6, 7, 8, 9, 10], m('s1', -2.85));                            // "two thousand …"
+    const box = S.box = dEntry(p, PX + prob.row.w + 14, PROB_Y, .3, { w: 300, size: 88 });
+    const card = dCard(p, PX - 52, PROB_Y - 112, prob.row.w + 14 + 300 + 104, 160, BLUE_BG, .3);
+    p.insertBefore(card, p.firstChild);
+    dLater(prob, [11], .3);
+    // "Line up the places." — the place names, then 6,357 drops into its columns
+    PLACE.forEach((w, k) => dText(p, w, COLS[k], LAB_Y, m('s1', .1 + k * .12), { size: 34, fill: PCOL[k], weight: 700 }));
+    [[0, 0], [2, 1], [3, 2], [4, 3]].forEach(([i, k], n) => dFly(digit(p, '6357'[n], k, R1_Y, m('s1', .3 + n * .1)), [0], [prob.row[i]._px, PROB_Y], m('s1', .3 + n * .1), .8));
+    dFly(comma(p, R1_Y, m('s1', .3)), [0], [prob.row[1]._px, PROB_Y], m('s1', .3), .8);
+    // "Ones under ones." — 2,486 drops in under it, the ones first
+    [[10, 3], [9, 2], [8, 1], [6, 0]].forEach(([i, k], n) => dFly(digit(p, '6842'[n], k, R2_Y, m('s2', n * .1)), [0], [prob.row[i]._px, PROB_Y], m('s2', n * .1), .8));
+    dFly(comma(p, R2_Y, m('s2', .3)), [0], [prob.row[7]._px, PROB_Y], m('s2', .3), .8);
+    dLine(p, ['+'], COLS[0] - 150, R2_Y, m('s2', .3), { size: SZ });
+    draw(path(p, `M${COLS[0] - 190} ${LINE_Y}H${COLS[3] + 80}`, { stroke: INK, 'stroke-width': 6 }, { d: 0 }), m('s2', .8), .5);
+    // "Start with the ones. Seven plus six is thirteen. Write three. Regroup one ten."
+    band(p, 3, m('o'), m('t'));
+    const f1 = dLine(p, [{ t: '7', fill: ONES }, ' + ', { t: '6', fill: ONES }, ' = ', { t: '1', fill: TENS }, { t: '3', fill: ONES }], FX, FY[0], m('o1'), { size: 64 });
+    dLater(f1, [1, 2], m('o1', .52)); dLater(f1, [3, 4, 5], m('o1', 1.32));
+    dFly(digit(p, 3, 3, ANS_Y, m('o2', .3)), [0], [f1.row[5]._px, FY[0]], m('o2', .3), .8);            // "Write three"
+    dFly(digit(p, 1, 2, CARRY_Y, m('o3', .5), { size: 52, fill: TENS }), [0], [f1.row[4]._px, FY[0]], m('o3', .5), .8);   // "one ten"
+    // "Tens. Five plus eight plus one is fourteen. Write four. Regroup one hundred."
+    band(p, 2, m('t'), m('h'));
+    const f2 = dLine(p, [{ t: '5', fill: TENS }, ' + ', { t: '8', fill: TENS }, ' + ', { t: '1', fill: TENS }, ' = ', { t: '1', fill: HUNS }, { t: '4', fill: TENS }], FX, FY[1], m('t1'), { size: 64 });
+    dLater(f2, [1, 2], m('t1', .5)); dLater(f2, [3, 4], m('t1', 1.08)); dLater(f2, [5, 6, 7], m('t1', 1.68));
+    dFly(digit(p, 4, 2, ANS_Y, m('t2', .3)), [0], [f2.row[7]._px, FY[1]], m('t2', .3), .8);            // "Write four"
+    dFly(digit(p, 1, 1, CARRY_Y, m('t3', .5), { size: 52, fill: HUNS }), [0], [f2.row[6]._px, FY[1]], m('t3', .5), .8);   // "one hundred"
+    // "Hundreds. Three plus four plus one is eight."
+    band(p, 1, m('h'), m('th'));
+    const f3 = dLine(p, [{ t: '3', fill: HUNS }, ' + ', { t: '4', fill: HUNS }, ' + ', { t: '1', fill: HUNS }, ' = ', { t: '8', fill: HUNS }], FX, FY[2], m('h1'), { size: 64 });
+    dLater(f3, [1, 2], m('h1', .37)); dLater(f3, [3, 4], m('h1', .98)); dLater(f3, [5, 6], m('h1', 1.59));
+    dFly(digit(p, 8, 1, ANS_Y, m('h1', 1.9)), [0], [f3.row[6]._px, FY[2]], m('h1', 1.9), .8);
+    // "Thousands. Six plus two is eight."
+    band(p, 0, m('th'), m('th1', 2.6));
+    const f4 = dLine(p, ['6', ' + ', '2', ' = ', '8'], FX, FY[3], m('th1'), { size: 64 });
+    dLater(f4, [1, 2], m('th1', .45)); dLater(f4, [3, 4], m('th1', 1.03));
+    dFly(digit(p, 8, 0, ANS_Y, m('th1', 1.4)), [0], [f4.row[4]._px, FY[3]], m('th1', 1.4), .8);
+    S.ansComma = comma(p, ANS_Y, m('th1', 1.4));
+  }],
+
+  ['answer', 'Type the sum', (m) => {
+    // "The sum is eight thousand, eight hundred forty-three. Type the sum." — the sum goes into the box
+    const p = S.panel;
+    const glow = mk('rect', { x: COLS[0] - 92, y: ANS_Y - 92, width: COLS[3] - COLS[0] + 184, height: 120, rx: 24, fill: 'none', stroke: ORANGE, 'stroke-width': 6 }, p);
+    put(glow, { o: 0 }); show(glow, m('a', .6), .4);
+    const e = S.box.type('8,843', m('type', .3));
+    dFly(e, [0], [(COLS[0] + COLS[3]) / 2, ANS_Y], m('type', .3), .8);
+  }],
+
+  ['mistake', 'Watch out', (m) => {
+    const p = panel(0);
+    dWatchOut(p, .3, 800, 110);
+    // the finished column work, smaller, on the left: the two regrouped 1s are what to remember
+    const cx = [180, 300, 420, 540], y1 = 400, y2 = 510, ya = 660, sz = 84;
+    const col = (d, k, y, t, o = {}) => dLine(p, [{ t: String(d), fill: o.fill || PCOL[k] }], cx[k], y, t, { size: o.size || sz });
+    '6357'.split('').forEach((d, k) => col(d, k, y1, .4));
+    '2486'.split('').forEach((d, k) => col(d, k, y2, .4));
+    '8843'.split('').forEach((d, k) => col(d, k, ya, .5));
+    [y1, y2, ya].forEach(y => dLine(p, [','], cx[0] + sz * .5, y, .4, { size: sz }));
+    dLine(p, ['+'], cx[0] - 110, y2, .4, { size: sz });
+    draw(path(p, `M${cx[0] - 140} ${y2 + 40}H${cx[3] + 66}`, { stroke: INK, 'stroke-width': 5 }, { d: 0 }), .4, .4);
+    col(1, 2, y1 - 92, .5, { size: 48, fill: TENS }); col(1, 1, y1 - 92, .5, { size: 48, fill: HUNS });
+    // "Do not forget the one you regroup." — the right sum first, the two regrouped 1s ringed
+    const R = 1150;
+    dRight(p, ['6,357 + 2,486', ' = ', '8,843'], R - 40, 380, m('w'), { size: 70 });
+    [[2, TENS], [1, HUNS]].forEach(([k, c], n) => {
+      const r = mk('circle', { cx: cx[k], cy: y1 - 108, r: 34, fill: 'none', stroke: c, 'stroke-width': 6 }, p);
+      put(r, { o: 0 }); show(r, m('w', .99 + n * .2), .3);
+    });
+    // "Eight thousand, seven hundred thirty-three is not it."
+    dMistake(p, ['6,357 + 2,486', ' = ', { t: '8,733', fill: RED }], R, 600, m('not'), null, { size: 70, strike: [2, 2], strikeAt: m('not', 3.25) });
+  }, { minDur: 10.4 }],
+
+  ['wrap', 'Remember', rememberBeat([['Line up the places.', 'w1'], ['Start with the ones.', 'w2'], ['Ten or more? Regroup.', 'w3']])],
+].map(([id, title, run, extra]) => ({ id, title, run, ...extra }));
+
+boot();
+</script>
+</body>
+</html>
