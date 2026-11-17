@@ -22,7 +22,16 @@
      area model with partial products: pic.area / explain.area). The question's 🔊 reads both after the question.
    Game keys nbtw-warmup (Warm-Up) / nbtp-practice (Practice) / nbta-test (Test Form A) / nbtb-test (Test Form B),
    storage prefix nbt_, session ids NB-…
-   PIN: 9377 (Teacher override)
+
+   ★ MRS. WRIGHT'S COPY (11/16/2026 — Marcos: "create a version for my grade partner similar to how my wife had with
+   heat map and everything data wise"). The same site as Mr. O's sbac-base-ten-iab-review (copied at eb6ce3f), with:
+   - Sign in = typed first and last name (no class list on this public site, like Mrs. Olivera's site);
+   - every save goes to Mrs. Wright's Corner (her own Google Sheet + script, wright-corner-apps-script/) — never to
+     Mr. O's class sheet or dashboard;
+   - the Teacher PIN is checked BY HER SHEET (action 'pin'); no PIN is in this site's files;
+   - 📊 Class Scores on the Teacher screen (class-scores.js): every student, in progress, the heat map, top 3 / bottom 3;
+   - its own storage names (nbtwr_…): Mr. O's site lives at the same web address (mroteacher.com), so the same names
+     would mix the two classes' saved work on a shared Chromebook.
 ═══════════════════════════════════════════════════════ */
 
 /* ── CONFIG ─────────────────────────────────────────── */
@@ -49,9 +58,9 @@ const NEXT_SECS     = 8;
 // Warm-Up steps are short (one small step of a problem), so their locks are short too
 const STEP_READ_SECS = 3;
 const STEP_NEXT_SECS = 3;
-const STORAGE_KEY   = 'nbt_session_v1';
-const SCORES_KEY    = 'nbt_scores_v1';
-const RNDQ_SESSION_ID_KEY = 'nbt_session_id_v1';
+const STORAGE_KEY   = 'nbtwr_session_v1';      // nbtwr_ = Mrs. Wright's copy (Mr. O's site: nbt_)
+const SCORES_KEY    = 'nbtwr_scores_v1';
+const RNDQ_SESSION_ID_KEY = 'nbtwr_session_id_v1';
 const newSessionId = () => 'NB-' + Math.random().toString(36).slice(2, 9).toUpperCase();
 let SESSION_ID = (() => {
   let id = localStorage.getItem(RNDQ_SESSION_ID_KEY);
@@ -115,7 +124,9 @@ function lockControl(el, locked) {
 }
 
 /* ── SHEET SUBMISSION ───────────────────────────────── */
-const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzv8CWv1yyi8NeH04now9UxVL4IZm5yMqqsEGMcgGdrcAOWVB-aSp5siTvSSJXIUpzFMA/exec';
+/* Mrs. Wright's Corner (wright-corner-apps-script): her own sheet. It answers the same requests Mr. O's class sheet does
+   (submit, progress, spotSave/spotGet/spotClear, recSave) plus 'pin' and 'scores'. */
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycby0XszjRmp0R2pG5C2dHi5eDpM0DhzFuBTPS5lRWAjPP90XaZHgJqe67q4YwofVjIiH9w/exec';
 
 let tabSwitchCount = 0;
 
@@ -203,65 +214,55 @@ function submitScoreFinal() {
   }).catch(() => {});
 }
 
-/* ── ROSTER ─────────────────────────────────────────── */
-const ROSTER = [
-  { name: "Mr. O (Teacher)",           id: "9377" },
-  { name: "Avery, Jo'Von",             id: "10053632" },
-  { name: "Belasquez Bonilla, Eduin",  id: "10058674" },
-  { name: "Castaneda, Kelvin",         id: "10053248" },
-  { name: "Chicas-Santos, Allison",    id: "10066737" },
-  { name: "Collado, Roniel",           id: "10060249" },
-  { name: "Dejesus, Michael",          id: "10049434" },
-  { name: "Dock, Fakeem",              id: "10059720" },
-  { name: "Douglas, Isaac",            id: "10070979" },
-  { name: "Douglas, Iyana",            id: "10070980" },
-  { name: "Dumphrey, Christopher",     id: "10060696" },
-  { name: "Flores, Kiara",             id: "10052834" },
-  { name: "Johnson, Destiny",          id: "10052926" },
-  { name: "Jones, Tahji",              id: "10060315" },
-  { name: "Lawrence, Eric",            id: "10057451" },
-  { name: "Madero, Jovany",            id: "10076374" },
-  { name: "Pettway, Lanaura",          id: "10060616" },
-  { name: "Polanco Soriano, Thiara",   id: "10060503" },
-  { name: "Roberts, Robyn",            id: "10060925" },
-  { name: "Rodriguez-Jimenez, Marcos", id: "10048936" },
-  { name: "Rojas, Alanie",             id: "10076388" },
-  { name: "Sanchez Rodriguez, Johanelyz", id: "10076767" },
-  { name: "Vega, Taishmara",           id: "10054043" },
-  { name: "Watts, Autumn",             id: "10039032" },
-  { name: "Zelaya-Osorto, Nazareth",   id: "10053626" }
-];
+/* ── SIGN IN: FIRST AND LAST NAME (Mrs. Wright's copy) ──
+   No class list on this public site (Mr. O's site picks from his roster). A student types a first and a last name,
+   like Mrs. Olivera's site. The name is tidied — one space between words, the first letter of each part capital and
+   the rest small ("maya  LOPEZ" → "Maya Lopez", "o'neal" → "O'Neal") — so the same child finds the same work on any
+   computer, and Mrs. Wright's Class Scores shows one row per child. Letters only (any language), with - ' . inside a
+   name; her sheet refuses anything else, so no formula can reach it. */
+const NAME_PART_OK = /^[\p{L}][\p{L}\p{M}.'’-]*$/u;
+const NAME_MAX = 28;   // each box (first + space + last stays under the sheet's 60)
+function tidyName(raw) {
+  return String(raw || '').trim().replace(/\s+/g, ' ').split(' ')
+    .map(w => w.split(/([-'’])/).map(p => (p && !/^[-'’]$/.test(p) ? p.charAt(0).toLocaleUpperCase() + p.slice(1).toLocaleLowerCase() : p)).join(''))
+    .join(' ');
+}
+// '' = fine; else what is wrong with this box
+function nameProblem(name, which) {
+  if (!name) return `Type your ${which} name.`;
+  if (!name.split(' ').every(w => NAME_PART_OK.test(w))) return `Use letters only in your ${which} name.`;
+  return '';
+}
 
-const GUEST_SLOTS = {
-  '937701': 'Guest 1', '937702': 'Guest 2', '937703': 'Guest 3',
-  '937704': 'Guest 4', '937705': 'Guest 5', '937706': 'Guest 6',
-  '937707': 'Guest 7', '937708': 'Guest 8', '937709': 'Guest 9',
-  '937710': 'Guest 10'
+/* ── THE TEACHER PIN, CHECKED BY HER SHEET ──
+   Her PIN is not in this site's files: her sheet's script answers { ok:true } or 'Wrong PIN' (after 20 wrong PINs in 10
+   minutes it answers 'Locked' for 10 minutes). → 'ok' · 'wrong' · 'locked' · 'offline' (no answer in 12 s). The guest
+   view (share.js) sends nothing to a sheet, so a guest — Try it as a student — is never asked for a PIN. */
+const PIN_WAIT_MS = 12000;
+const TEACHER_PIN_KEY = 'nbtwr_tpin';   // sessionStorage: the PIN she gave in this tab, for 📊 Class Scores (✕ Exit teacher clears it)
+function checkTeacherPin(pin) {
+  const ctl = typeof AbortController === 'function' ? new AbortController() : null;
+  const timer = setTimeout(() => { if (ctl) ctl.abort(); }, PIN_WAIT_MS);
+  return fetch(SHEET_URL, { method: 'POST', body: JSON.stringify({ action: 'pin', pin }), signal: ctl ? ctl.signal : undefined })
+    .then(r => r.json())
+    .then(d => (d && d.ok === true ? 'ok' : d && d.error === 'Locked' ? 'locked' : d && d.error === 'Wrong PIN' ? 'wrong' : 'offline'))
+    .catch(() => 'offline')
+    .finally(() => clearTimeout(timer));
+}
+const PIN_SAYS = {
+  wrong:   '❌ Incorrect PIN. Try again.',
+  locked:  '🔒 Too many wrong PINs. Wait 10 minutes, then try again.',
+  offline: "📶 Can't reach Mrs. Wright's Corner. Check the internet, then try again."
 };
-
-/* ── BUILD DROPDOWN ─────────────────────────────────── */
-(function buildRoster() {
-  const sel = document.getElementById('name-select');
-  ROSTER.forEach(s => {
-    const o = document.createElement('option');
-    o.value = s.name; o.textContent = s.name;
-    sel.appendChild(o);
-  });
-  const div = document.createElement('option');
-  div.disabled = true; div.textContent = '── Guest Slots ──';
-  sel.appendChild(div);
-  Object.entries(GUEST_SLOTS).forEach(([code, label]) => {
-    const o = document.createElement('option');
-    o.value = `GUEST:${code}`; o.textContent = `🙋 ${label}`;
-    sel.appendChild(o);
-  });
-})();
+function rememberTeacherPin(pin) { try { sessionStorage.setItem(TEACHER_PIN_KEY, pin); } catch (e) {} }
+function givenTeacherPin() { try { return sessionStorage.getItem(TEACHER_PIN_KEY) || ''; } catch (e) { return ''; } }
 
 /* ── STATE ──────────────────────────────────────────── */
 let loggedInName    = '';
 let unlockedForms   = new Set();
 let retakeFor       = '';      // the test ('A' or 'B') the Teacher PIN unlocked a retake of; cleared on sign-in and Sign Out
 let pinModalCallback = null;
+let pinModalBusy     = false;   // her sheet is checking a PIN
 let activeSpeakBtn  = null;
 let reviewMode      = false;   // only the tests set these now: the Teacher screen replaced the Manual / Auto-run
 let reviewAutoRun   = false;   // pop-ups (the Lab's screen, 10/30) — the site no longer answers for the teacher
@@ -270,8 +271,8 @@ let reviewAutoRun   = false;   // pop-ups (the Lab's screen, 10/30) — the site
    the page, then ONE screen: a part, a version — any part, nothing passed first. The PIN lasts for this tab
    (sessionStorage) until ✕ Exit teacher. 👀 Try it as a student opens the guest view (share.js: nothing reaches the
    sheet) on ?teach=<PART>.<version>, started the way a first try starts. */
-const TEACHER_KEY      = 'nbt_teacher';        // sessionStorage: '1' = the Teacher PIN was given in this tab
-const TEACHER_PICK_KEY = 'nbt_teacher_pick';   // sessionStorage: the last part and version picked
+const TEACHER_KEY      = 'nbtwr_teacher';        // sessionStorage: '1' = the Teacher PIN was given in this tab
+const TEACHER_PICK_KEY = 'nbtwr_teacher_pick';   // sessionStorage: the last part and version picked
 const TEACH_PARTS      = ['W', 'P', 'A', 'B'];
 const versionCount = id => { const v = window['FORM_' + id + '_V']; return Array.isArray(v) && v.length ? v.length : 1; };
 const TEACH = (() => {
@@ -1042,7 +1043,7 @@ const app = {
 
   /* ── screens ── */
   show(id) {
-    ['start-screen','readaloud-screen','directions-screen','quiz-screen','end-screen','scoreboard-screen','teacher-screen','key-screen','slide-screen']
+    ['start-screen','readaloud-screen','directions-screen','quiz-screen','end-screen','scoreboard-screen','teacher-screen','key-screen','slide-screen','class-screen']
       .forEach(s => document.getElementById(s).classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
     syncFormLabel(id);
@@ -1119,68 +1120,29 @@ const app = {
     this.checkResume();
   },
 
-  /* ── NAME SELECT ── */
-  onNameSelect() {
-    const val = document.getElementById('name-select').value;
-    const pinSec   = document.getElementById('pin-section');
-    const guestSec = document.getElementById('guest-name-section');
-    document.getElementById('login-error').textContent = '';
-    if (!val) { pinSec.classList.add('hidden'); return; }
-    pinSec.classList.remove('hidden');
-    if (val.startsWith('GUEST:')) {
-      guestSec.classList.remove('hidden');
-      document.getElementById('pin-label').textContent = '🔒 Enter guest code:';
-    } else {
-      guestSec.classList.add('hidden');
-      document.getElementById('pin-label').textContent = '🔒 Enter your student number:';
-    }
-    setTimeout(() => document.getElementById('student-pin').focus(), 80);
-  },
-
-  /* ── LOGIN ── */
+  /* ── LOGIN: first and last name (Mrs. Wright's copy — see tidyName) ── */
   attemptLogin() {
-    const selVal = document.getElementById('name-select').value;
-    const pin    = document.getElementById('student-pin').value.trim();
+    const firstEl = document.getElementById('first-name'), lastEl = document.getElementById('last-name');
     const errEl  = document.getElementById('login-error');
     errEl.textContent = ''; errEl.style.color = '#c0392b';
-
-    if (!selVal) { errEl.textContent = '⚠️ Please select your name.'; return; }
-    if (!pin)    { errEl.textContent = '⚠️ Please enter your student number.'; return; }
-
-    let matched = false, displayName = '';
-
-    if (selVal.startsWith('GUEST:')) {
-      const code = selVal.replace('GUEST:', '');
-      if (pin === code) {
-        const firstName = (document.getElementById('guest-display-name').value || '').trim();
-        if (!firstName) { errEl.textContent = '⚠️ Please enter your first name.'; return; }
-        matched = true;
-        displayName = firstName + ' (Guest)';
-      } else {
-        errEl.textContent = '❌ Incorrect guest code. Try again.'; return;
-      }
-    } else {
-      const student = ROSTER.find(s => s.name === selVal);
-      if (student && student.id === pin) {
-        matched = true; displayName = selVal;
-      } else {
-        errEl.textContent = '❌ Incorrect student number. Try again.'; return;
-      }
+    const first = tidyName(firstEl.value).slice(0, NAME_MAX), last = tidyName(lastEl.value).slice(0, NAME_MAX);
+    const why = nameProblem(first, 'first') || nameProblem(last, 'last');
+    if (why) {
+      errEl.textContent = '⚠️ ' + why;
+      (nameProblem(first, 'first') ? firstEl : lastEl).focus();
+      return;
     }
-
-    if (matched) {
-      loggedInName     = displayName;
-      this.studentName = displayName;
-      document.getElementById('student-pin').value = '';
-      document.getElementById('login-error').textContent = '';
-      const loginCard = document.getElementById('login-step-card');
-      if (loginCard) loginCard.classList.add('hidden');
-      document.getElementById('form-select-section').classList.remove('hidden');
-      retakeFor = '';           // a PIN unlock never carries over to the next student
-      applyFormLocks(displayName);
-      this.checkResume();
-      this.waitForSheetWork(displayName);
-    }
+    const displayName = first + ' ' + last;
+    firstEl.value = ''; lastEl.value = '';
+    loggedInName     = displayName;
+    this.studentName = displayName;
+    const loginCard = document.getElementById('login-step-card');
+    if (loginCard) loginCard.classList.add('hidden');
+    document.getElementById('form-select-section').classList.remove('hidden');
+    retakeFor = '';           // a PIN unlock never carries over to the next student
+    applyFormLocks(displayName);
+    this.checkResume();
+    this.waitForSheetWork(displayName);
   },
 
   /* The parts wait a moment while the sheet is asked for this student's work from other Chromebooks */
@@ -1234,8 +1196,9 @@ const app = {
   /* ── 🧑‍🏫 THE TEACHER SCREEN (see TEACHER_KEY) ── */
   promptTeacherReview() {
     if (teacherUnlocked()) { this.openTeacher(); return; }
-    this.showPinModal('🧑‍🏫 Teacher', 'Enter the Teacher PIN.', () => {
+    this.showPinModal('🧑‍🏫 Teacher', 'Enter the Teacher PIN.', pin => {
       try { sessionStorage.setItem(TEACHER_KEY, '1'); } catch (e) {}
+      rememberTeacherPin(pin);
       this.openTeacher();
     });
   },
@@ -1376,7 +1339,7 @@ const app = {
     // the paper's own title (Marcos 11/4: "every print version should have a title"): Print hides the bar above,
     // so the printout says which part and version it is
     const html = [`<div class="key-print-head"><h1>SBAC Practice: Base Ten Answer Key — ${this._teachLabel(t.form, t.version)}</h1>` +
-      `<p>Smarter Balanced IAB Practice · Number and Operations in Base Ten · Mr. O's 4th Grade · ${qs.length} questions</p></div>`,
+      `<p>Smarter Balanced IAB Practice · Number and Operations in Base Ten · Mrs. Wright's 4th Grade · ${qs.length} questions</p></div>`,
       `<p class="key-note">Each child sees the choices (and the select-all options) in a shuffled order, so there are no letters here. The right answer has a ✅. True/False rows stay in this order.</p>`];
     qs.forEach((q, i) => {
       const pic = q.pic && !q.explain ? `<div class="key-pic">${M2V.picHTML(q.pic)}</div>` : '';   // the worked picture under Why shows the same model
@@ -1425,7 +1388,7 @@ const app = {
   },
 
   exitTeacher() {
-    try { sessionStorage.removeItem(TEACHER_KEY); } catch (e) {}
+    try { sessionStorage.removeItem(TEACHER_KEY); sessionStorage.removeItem(TEACHER_PIN_KEY); } catch (e) {}
     if (location.hash) history.replaceState(null, '', location.pathname + location.search);
     this.exitReviewMode();
   },
@@ -2743,7 +2706,7 @@ const app = {
   showScores(autoShow = false) {
     this.show('scoreboard-screen');
     const teacherBtns = document.getElementById('teacher-score-btns');
-    if (teacherBtns) teacherBtns.style.display = this.studentName === 'Mr. O (Teacher)' ? 'flex' : 'none';
+    if (teacherBtns) teacherBtns.style.display = 'none';   // (Mr. O's site shows them to his own sign-in; this copy has no teacher sign-in)
     if (!reviewMode) this._startScoreLock(autoShow ? 60 : 0);
 
     const all    = JSON.parse(localStorage.getItem(SCORES_KEY) || '[]');
@@ -2851,15 +2814,20 @@ const app = {
 
   confirmClearScores() {
     const pin = document.getElementById('clear-pin-input').value.trim();
-    if (pin === '9377') {
-      localStorage.removeItem(SCORES_KEY);
-      document.getElementById('clear-confirm-panel').classList.add('hidden');
-      this.showScores();
-    } else {
-      document.getElementById('clear-pin-error').textContent = '❌ Incorrect PIN. Try again.';
-      document.getElementById('clear-pin-input').value = '';
-      document.getElementById('clear-pin-input').focus();
-    }
+    if (!pin) return;
+    document.getElementById('clear-pin-error').textContent = '⏳ Checking…';
+    checkTeacherPin(pin).then(r => {
+      if (r === 'ok') {
+        localStorage.removeItem(SCORES_KEY);
+        document.getElementById('clear-pin-error').textContent = '';
+        document.getElementById('clear-confirm-panel').classList.add('hidden');
+        this.showScores();
+      } else {
+        document.getElementById('clear-pin-error').textContent = PIN_SAYS[r];
+        document.getElementById('clear-pin-input').value = '';
+        document.getElementById('clear-pin-input').focus();
+      }
+    });
   },
 
   cancelClearScores() {
@@ -2927,9 +2895,8 @@ const app = {
     loggedInName        = '';
     unlockedForms       = new Set();
     retakeFor           = '';
-    document.getElementById('name-select').value = '';
-    document.getElementById('student-pin').value = '';
-    document.getElementById('pin-section').classList.add('hidden');
+    document.getElementById('first-name').value = '';
+    document.getElementById('last-name').value = '';
     document.getElementById('form-select-section').classList.add('hidden');
     document.getElementById('resume-container').classList.add('hidden');
     document.getElementById('login-error').textContent = '';
@@ -2942,7 +2909,9 @@ const app = {
 
   /* ── GLOBAL PIN MODAL ── */
   showPinModal(title, msg, onSuccess) {
+    if (SHARE_MODE) { if (onSuccess) onSuccess(''); return; }   // a guest view sends nothing to a sheet: no PIN to check
     pinModalCallback = onSuccess;
+    pinModalBusy = false;
     document.getElementById('pin-modal-title').textContent = title;
     document.getElementById('pin-modal-msg').textContent   = msg;
     document.getElementById('pin-modal-input').value       = '';
@@ -2952,22 +2921,33 @@ const app = {
   },
 
   confirmPinModal() {
-    const pin = document.getElementById('pin-modal-input').value.trim();
-    if (pin === '9377') {
-      document.getElementById('pin-modal').classList.add('hidden');
-      const cb = pinModalCallback;
-      pinModalCallback = null;
-      if (cb) cb();
-    } else {
-      document.getElementById('pin-modal-error').textContent = '❌ Incorrect PIN. Try again.';
-      document.getElementById('pin-modal-input').value = '';
-      document.getElementById('pin-modal-input').focus();
-    }
+    const input = document.getElementById('pin-modal-input'), err = document.getElementById('pin-modal-error');
+    const pin = input.value.trim();
+    if (!pin || pinModalBusy) return;
+    pinModalBusy = true;
+    const asked = pinModalCallback;
+    err.style.color = '#555'; err.textContent = '⏳ Checking…';
+    checkTeacherPin(pin).then(r => {
+      pinModalBusy = false;
+      if (pinModalCallback !== asked) return;             // cancelled (or another PIN box opened) meanwhile
+      err.style.color = '';
+      if (r === 'ok') {
+        err.textContent = '';
+        document.getElementById('pin-modal').classList.add('hidden');
+        pinModalCallback = null;
+        if (asked) asked(pin);
+      } else {
+        err.textContent = PIN_SAYS[r];
+        input.value = '';
+        input.focus();
+      }
+    });
   },
 
   cancelPinModal() {
     document.getElementById('pin-modal').classList.add('hidden');
     pinModalCallback = null;
+    pinModalBusy = false;
   }
 };
 
@@ -3098,7 +3078,7 @@ else if (location.hash === '#teacher' && teacherUnlocked()) app.openTeacher();
   btn.textContent = '🔒 Not Open Yet';
   const note = document.createElement('p');
   note.className = 'locked-note';
-  note.textContent = "Mr. O will let you know when this is ready!";
+  note.textContent = "Mrs. Wright will let you know when this is ready!";
   btn.insertAdjacentElement('afterend', note);
 })();
 
@@ -3120,7 +3100,7 @@ else if (location.hash === '#teacher' && teacherUnlocked()) app.openTeacher();
    (STORAGE_KEY) on the sheet. At sign-in, checkResume waits for the sheet once (the menu held, "Looking for your saved
    work…") and the copy that is further along is the one "Welcome back! Resume Where I Left Off" shows. */
 if (window.SpotSync) SpotSync.init({
-  site: 'sbac-base-ten-iab-review', key: STORAGE_KEY, url: SHEET_URL, app,
+  site: 'sbac-base-ten-iab-wright', key: STORAGE_KEY, url: SHEET_URL, app,   // her sheet allows only this site
   who: () => loggedInName,
   skip: () => SHARE_MODE || reviewMode,
   usable: s => Array.isArray(s.currentBank) && s.currentBank.length > 0

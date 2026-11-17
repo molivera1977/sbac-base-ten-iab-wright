@@ -111,8 +111,8 @@
     var bar = document.createElement('div');
     bar.className = 'share-banner';
     bar.textContent = teacher
-      ? '👀 Teacher / admin guest view · nothing is saved or sent to Mr. O'
-      : '👀 Guest view · your results show at the end · nothing is saved or sent to Mr. O';
+      ? '👀 Teacher / admin guest view · nothing is saved or sent to Mrs. Wright'
+      : '👀 Guest view · your results show at the end · nothing is saved or sent to Mrs. Wright';
     /* Pinned across the very top of the screen. It is taken out of the page's own layout on purpose:
        some sites lay <body> out as a row or pad it, and a banner placed "first in the page" then lands
        beside the content or inset from the edges. The page is pushed down by the banner's height. */
@@ -266,9 +266,9 @@
         card(start, 'guest-student-note', 'Take it the way a student does', own.student || [
           ['🔓', 'Every part open', 'No sign-in and nothing locked.'],
           ['📊', 'Score and right answers', 'Shown at the end of each part.'],
-          ['🛡️', 'Nothing is saved', 'No scores go to Mr. O.']
+          ['🛡️', 'Nothing is saved', 'No scores go to Mrs. Wright.']
         ]);
-        card(tb, 'guest-teacher-note', 'Teacher Mode · no PIN · what Mr. O sees', tools);
+        card(tb, 'guest-teacher-note', 'Teacher Mode · no PIN · what Mrs. Wright sees', tools);
 
         /* ONE LINE, THE SAME SIZE (v9, Marcos 11/15: "Yes, check and fix"). The site's own big-button padding wrapped
            "🧑‍🏫 Teacher / admin guest" onto two lines beside a one-line Student guest (13 sites), or wrapped both (7).

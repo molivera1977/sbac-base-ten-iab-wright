@@ -1225,3 +1225,57 @@ input.entry-input.incorrect { background: #f8d7da; border-color: #dc3545; color:
 .nb-area .nb-area-grid.hl { background: none; outline: 4px solid #ffe01b; outline-offset: 4px; }
 .nb-area .nb-area-cell.hl { background: #ffe01b; }
 .nb-area .nb-area-sum.hl { background: #ffe01b; border-radius: 6px; }
+
+/* ═══════════════════════════════════════════════════════
+   📊 CLASS SCORES (Mrs. Wright's copy, class-scores.js): the Teacher screen's card, then one screen — summary, working
+   now, scores per part, the question heat map, top 3 / bottom 3. Mrs. Olivera's Class Scores, in this site's colors.
+═══════════════════════════════════════════════════════ */
+.t-act.t-class { display: block; width: 100%; margin: 0 0 6px; background: #f4f0ff; border-color: var(--primary-dark); }
+.t-act.t-class:hover { background: #e9e1ff; }
+.cs-acts { display: flex; gap: 8px; flex-wrap: wrap; }
+.cs-msg { text-align: center; font-weight: 700; color: #444; padding: 26px 10px; }
+.cs-err { color: var(--danger); }
+.cs-sum { font-size: 1.02rem; margin: 4px 0 10px; color: #333; }
+.cs-h { font-size: 1.05rem; color: var(--primary); margin: 20px 0 8px; }
+.cs-h span { font-weight: 400; font-size: 0.85rem; color: #666; margin-left: 6px; }
+.cs-working { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.cs-working li { background: #eef7ff; border: 1px solid #b9dcf7; border-radius: 10px; padding: 7px 12px; font-size: 0.95rem; }
+.cs-ago { float: right; color: #777; font-size: 0.85rem; }
+.cs-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid #ddd; border-radius: 12px; background: #fff; }
+.cs-table, .cs-heat { border-collapse: collapse; width: 100%; font-family: Lexend, system-ui, sans-serif; font-size: 0.92rem; }
+.cs-table th, .cs-table td { border-bottom: 1px solid #eee; padding: 8px 10px; text-align: left; vertical-align: top; }
+.cs-table thead th { background: #f4f0ff; color: var(--primary-dark); white-space: nowrap; }
+.cs-table tbody th { white-space: nowrap; font-weight: 600; }
+.cs-table td b { display: block; font-weight: 700; white-space: nowrap; }
+.cs-table td span { display: block; font-size: 0.8rem; color: #666; }
+.cs-table td .cs-pct { display: inline; font-size: 0.92rem; }
+.cs-none { color: #bbb; }
+.cs-now { color: #1565c0 !important; font-weight: 700; }
+.cs-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 6px 0; }
+.cs-tab { font: inherit; font-size: 0.92rem; font-weight: 700; padding: 6px 12px; border-radius: 9px; cursor: pointer;
+          background: #fff; color: var(--primary); border: 2px solid #c5d3ea; }
+.cs-tab.on { background: var(--primary); color: #fff; border-color: var(--primary); }
+.cs-legend { font-size: 0.88rem; color: #444; margin: 8px 0; }
+.cs-heat th, .cs-heat td { border: 1px solid #eee; padding: 5px 6px; text-align: center; min-width: 30px; }
+.cs-heat thead th { background: #f4f0ff; color: var(--primary-dark); }
+.cs-heat tbody th, .cs-heat tfoot th { text-align: left; white-space: nowrap; font-weight: 600; position: sticky; left: 0; background: #fff; z-index: 1; }
+.cs-heat tfoot td, .cs-heat tfoot th { font-weight: 800; border-top: 2px solid #ccc; }
+.h-ok { color: #1e8449; background: #eafaf1; }
+.h-miss { color: #c0392b; background: #fdecea; font-weight: 800; }
+.h-hi { background: #c8f0d6; color: #145a32; }
+.h-mid { background: #fff3b0; color: #7d6608; }
+.h-low { background: #ffd9b3; color: #8a4500; }
+.h-bad { background: #f9c0c0; color: #922b21; }
+.cs-pct { border-radius: 6px; padding: 0 5px; }
+.h-score { white-space: nowrap; }
+.cs-tag { font-size: 0.72rem; background: #eee; border-radius: 6px; padding: 1px 5px; color: #555; font-weight: 400; }
+.cs-rank-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 12px; margin-top: 14px; }
+.cs-rank-box { background: #fff; border: 2px solid #e6e0f5; border-radius: 12px; padding: 10px 14px; }
+.cs-rank-box h4 { margin: 2px 0 8px; color: var(--primary-dark); font-size: 1rem; }
+.cs-rank-box h4 span { font-weight: 400; font-size: 0.82rem; color: #666; margin-left: 4px; }
+.cs-rank { margin: 0; padding-left: 20px; display: grid; gap: 10px; }
+.cs-rank-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
+.cs-pill { font-size: 0.82rem; border-radius: 999px; padding: 1px 9px; font-weight: 700; }
+.cs-q { font-family: Andika, system-ui, sans-serif; font-size: 0.92rem; color: #333; margin-top: 3px; line-height: 1.4; }
+.cs-note { font-size: 0.85rem; color: #666; margin: 10px 0 0; }
+@media (max-width: 600px) { .cs-ago { float: none; display: block; } .cs-table, .cs-heat { font-size: 0.84rem; } }

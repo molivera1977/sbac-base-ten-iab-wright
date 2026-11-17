@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Lexend:wght@500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=nbt1" />
+  <link rel="stylesheet" href="style.css?v=wr1" />
 </head>
 <body>
 <canvas id="confetti-canvas"></canvas>
@@ -21,7 +21,7 @@
 ══════════════════════════════════════════ -->
 <div class="container">
   <h1>🧮 SBAC Practice: Number &amp; Operations in Base Ten</h1>
-  <p class="welcome-sub">Smarter Balanced IAB Practice · 4.NBT.2–4.NBT.6</p>
+  <p class="welcome-sub">Smarter Balanced IAB Practice · 4.NBT.2–4.NBT.6 · Mrs. Wright's 4th Grade</p>
 
   <div id="start-screen">
 
@@ -87,22 +87,14 @@
       <div class="step-card" id="login-step-card">
         <span class="step-label">Sign In</span>
         <div class="login-box">
-          <label for="name-select">👤 Select your name:</label>
-          <select id="name-select" onchange="app.onNameSelect()">
-            <option value="">-- Choose your name --</option>
-          </select>
-
-          <div id="pin-section" class="hidden">
-            <label for="student-pin" id="pin-label">🔒 Enter your student number:</label>
-            <input type="password" id="student-pin" placeholder="Student number…"
-                   onkeydown="if(event.key==='Enter') app.attemptLogin()" autocomplete="new-password" />
-            <div id="guest-name-section" class="hidden">
-              <label for="guest-display-name">✏️ Enter your first name:</label>
-              <input type="text" id="guest-display-name" placeholder="e.g. Henry" maxlength="20"
-                     onkeydown="if(event.key==='Enter') app.attemptLogin()" />
-            </div>
-            <button class="sign-in-btn" onclick="app.attemptLogin()">✅ Sign In</button>
-          </div>
+          <!-- Mrs. Wright's copy: a typed first and last name (no class list on this public site) -->
+          <label for="first-name">👤 First name</label>
+          <input type="text" id="first-name" maxlength="28" autocomplete="off" autocapitalize="words" spellcheck="false"
+                 onkeydown="if(event.key==='Enter') document.getElementById('last-name').focus()" />
+          <label for="last-name">👤 Last name</label>
+          <input type="text" id="last-name" maxlength="28" autocomplete="off" autocapitalize="words" spellcheck="false"
+                 onkeydown="if(event.key==='Enter') app.attemptLogin()" />
+          <button class="sign-in-btn" onclick="app.attemptLogin()">✅ Sign In</button>
 
           <div class="login-error" id="login-error"></div>
         </div>
@@ -214,7 +206,7 @@
         <button class="speak-btn" onclick="speakDir(this)">🔊</button>
         <h3 style="margin:0;">👤 Sign In</h3>
       </div>
-      <p class="dir-text">Pick your name. Type your student number. Tap Sign In. Guest students also type their first name.</p>
+      <p class="dir-text">Type your first name. Type your last name. Tap Sign In.</p>
     </div>
 
     <div class="dir-section paper-dir">
@@ -392,7 +384,7 @@
     <div id="clear-confirm-panel" class="hidden"
          style="background:#fff3cd;border:2px solid #ffc107;border-radius:12px;padding:16px 20px;margin:14px 0;">
       <p style="margin:0 0 10px;font-weight:bold;color:#856404;">🔒 Enter Teacher PIN to clear all scores:</p>
-      <input type="password" id="clear-pin-input" placeholder="PIN…" maxlength="10" autocomplete="off"
+      <input type="password" id="clear-pin-input" placeholder="PIN…" maxlength="40" autocomplete="off"
              onkeydown="if(event.key==='Enter') app.confirmClearScores()"
              style="padding:9px 12px;border-radius:8px;border:2px solid #ccc;font-size:1rem;font-family:inherit;margin-bottom:8px;width:100%;"/>
       <div id="clear-pin-error" style="color:#c0392b;font-weight:bold;min-height:18px;margin-bottom:8px;font-size:0.9rem;"></div>
@@ -421,6 +413,8 @@
       <span class="t-note">Nothing here is saved or sent.</span>
       <button type="button" class="t-exit" id="t-exit-btn" onclick="app.exitTeacher()">✕ Exit teacher</button>
     </div>
+    <!-- 📊 CLASS SCORES (Mrs. Wright's copy, like Mrs. Olivera's site): every student's work from her sheet -->
+    <button type="button" class="t-act t-class" id="t-class" onclick="app.openClassScores()">📊 Class Scores<span>Every student's work from every computer: scores, who is working now, a heat map of every question, the top 3 and the bottom 3.</span></button>
     <h3 class="t-h">Part</h3>
     <div class="t-row" id="t-parts"></div>
     <div id="t-version-row">
@@ -433,6 +427,19 @@
       <button type="button" class="t-act" id="t-key" onclick="app.teacherKey()">✅ Answer key<span>Every scored question of this part and version on one page, the right answer marked, and why. You can print it.</span></button>
       <button type="button" class="t-act" id="t-slides" data-guest-slides onclick="app.teacherSlides()">🖥️ Slide Mode<span>The lessons, big, for your desk or the board: the worked examples, one step at a time. Their numbers are on no question.</span></button>
     </div>
+  </div>
+
+  <!-- 📊 CLASS SCORES (class-scores.js): read from Mrs. Wright's Corner with her PIN; nothing is written -->
+  <div id="class-screen" class="hidden">
+    <div class="t-bar">
+      <span class="t-title">📊 Class Scores</span>
+      <span class="t-note" id="cs-when"></span>
+      <span class="cs-acts">
+        <button type="button" class="t-exit cs-refresh" onclick="app.openClassScores()">↻ Refresh</button>
+        <button type="button" class="t-exit" onclick="app.backToTeacher()">← Teacher screen</button>
+      </span>
+    </div>
+    <div id="cs-body"></div>
   </div>
 
   <!-- 🖥️ SLIDE MODE (teaching only, Marcos 10/30): data/slides.js — worked examples whose numbers are on no question and
@@ -470,7 +477,7 @@
     <div class="pin-modal-inner">
       <h3 id="pin-modal-title" style="color:var(--primary);margin:0 0 10px;text-align:center;"></h3>
       <p  id="pin-modal-msg"   style="text-align:center;color:#555;margin-bottom:14px;font-size:0.95rem;line-height:1.5;"></p>
-      <input type="password" id="pin-modal-input" placeholder="Teacher PIN…" maxlength="10" autocomplete="off"
+      <input type="password" id="pin-modal-input" placeholder="Teacher PIN…" maxlength="40" autocomplete="off"
              onkeydown="if(event.key==='Enter') app.confirmPinModal()"
              style="width:100%;padding:11px 14px;border-radius:10px;border:2px solid #ccc;
                     font-size:1.05rem;font-family:inherit;margin-bottom:8px;" />
@@ -497,13 +504,13 @@
   <button type="button" id="teach-back" onclick="app.backToTeacher()">← Teacher screen</button>
 </div>
 
-<script src="share.js?v=9"></script>
+<script src="share.js?v=wr1"></script>
 <script src="form-label.js?v=nbt1"></script>
 <!-- the recorded voice (Module 4's: Ava): every line the site can say, made ahead by a harvest run of the site; kokoro-voice.js
      plays them in place of the device voice (Marcos 11/14: "Yes, record Ava"). The list = site-tests nbt-kokoro.spec.js
      (KOKORO_LIST), recorded by kokoro-voice/make_ava_kokoro.py; then tools/stamp.js. A line with no recording is said by
      the device voice. Before next-waits.js, which listens to it. -->
-<script src="kokoro/lines.js?v=f7dfa256"></script>
+<script src="kokoro/lines.js?v=c1733c2d"></script>
 <script src="kokoro-voice.js?v=ks1116"></script>
 <script src="next-waits.js?v=nbt1" data-hold='#next-btn, #lc-next'></script>
 <!-- the questions (tools/SCHEMA.md): Warm-Up, Practice, Test Form A, Test Form B, and the Practice's "try one like it" -->
@@ -522,6 +529,7 @@
      aloud instead), and the player. After kokoro-voice.js (video.js stops a video when the site speaks), before script.js. -->
 <script src="data/videos.js?v=1dcad845"></script>
 <script src="video.js?v=nbt1"></script>
-<script src="script.js?v=nbt3"></script>
+<script src="script.js?v=wr1"></script>
+<script src="class-scores.js?v=wr2"></script>
 </body>
 </html>
