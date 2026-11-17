@@ -8,7 +8,7 @@
      Step 1  WARM-UP      form W  worked examples the student must hear (the lesson video when there is one,
                                   else the read-aloud worked example), steps (NOT scored), then easier questions;
                                   hints open and read themselves; word help; 4 versions = new numbers on each
-                                  retry; unlimited; 70% opens the Practice
+                                  retry; unlimited; finishing it (any score) opens the Practice
      Step 2  PRACTICE     form P  the test's kinds of questions; hints read themselves; word help; 4 versions;
                                   unlimited; a miss is followed by "try one like it" (FORM_X); 70% opens Test Form A
      Step 3  TEST FORM A  form A  one try, right/wrong only (no answer shown, no mistake named), then locked
@@ -42,16 +42,16 @@ const WARM_UP_OPEN  = true;    // Step 1 · Warm-Up — watch, step by step, the
 const PRACTICE_OPEN = true;    // Step 2 · Practice — the hints read themselves aloud
 const TEST_A_OPEN   = false;   // Step 3 · Test Form A — one try (a retake needs the Teacher PIN) — opens on his word
 const TEST_B_OPEN   = false;   // Step 4 · Test Form B — one try (a retake needs the Teacher PIN) — opens on his word
-// THE GATES (70% = PASS_PCT; the best try counts):
+// THE GATES (PASS_PCT; Mrs. Wright's copy 11/17: 0 = IN ORDER, ANY SCORE — her class is not used to a 70% gate):
 //   Warm-Up, Practice   as many times as they like
-//   Practice     opens after a Warm-Up with 70% or better; a student who already passed the Practice keeps it open
-//   Test Form A  opens after a Practice with 70% or better
+//   Practice     opens once a Warm-Up is finished (any score)
+//   Test Form A  opens once a Practice is finished (any score)
 //   Test Form B  opens after Test Form A is finished (any score)
 // The Teacher PIN lets one student past a gate (Module 4's rule: skipping a step "should need a teacher pin entry").
 // Scores are remembered on the device (and on the sheet: spot-sync.js / the 'progress' read at sign-in).
 // ANY_ORDER true = no gates at all (every open part can be started).
 const ANY_ORDER     = false;
-const PASS_PCT      = 70;
+const PASS_PCT      = 0;    // Mrs. Wright's copy (Marcos 11/17: "In order, any score" — like Mrs. Olivera's site): finishing a part opens the next (Mr. O's site: 70)
 const INSTRUCT_SECS = 15;
 const READ_SECS     = 12;
 const NEXT_SECS     = 8;
@@ -750,7 +750,7 @@ function applyFormLocks(name) {
   const bestW = bestScore(name, 'W'), nW = scoredCount(window.FORM_W);
   setFormButton('W', '🔥 Warm-Up',
     !bestW ? `watch, then try · ${nW} questions · 💡 hints`
-    : passed(name, 'W') ? `✅ Best: ${bestW.score} of ${bestW.total} · do it again any time`
+    : passed(name, 'W') ? `✅ Best: ${bestW.score} of ${bestW.total} · do it again any time`   // (PASS_PCT 0: any finished try)
     : `🔁 Best: ${bestW.score} of ${bestW.total} · get ${needFor('W')} to open the Practice`,
     warmUpWait(name));
   // Practice: waits for 70% on the Warm-Up; no limit. After a try the button shows the best score and what opens Test Form A.
