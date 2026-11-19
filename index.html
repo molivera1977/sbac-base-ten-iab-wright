@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Lexend:wght@500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=wr1" />
+  <link rel="stylesheet" href="style.css?v=wr6" />
 </head>
 <body>
 <canvas id="confetti-canvas"></canvas>
@@ -440,6 +440,18 @@
       </span>
     </div>
     <div id="cs-body"></div>
+    <!-- ✏️ FIX A NAME (Marcos 11/18, from the reading sites): outside #cs-body, so ↻ Refresh never wipes what she typed -->
+    <section id="cs-fix" class="cs-fix" hidden aria-labelledby="cs-fix-h">
+      <h3 class="cs-h" id="cs-fix-h">✏️ Fix a name <span>a student who typed their name wrong shows up as another student</span></h3>
+      <p class="cs-fix-note">Move that work to the right name. Every row of that name on your sheet changes. Nothing is deleted. A part the student was in the middle of starts over under the right name.</p>
+      <div class="cs-fix-row">
+        <label>Name to fix <select id="cs-fix-from"></select></label>
+        <label>Right first name <input id="cs-fix-first" type="text" maxlength="28" autocomplete="off" spellcheck="false"></label>
+        <label>Right last name <input id="cs-fix-last" type="text" maxlength="28" autocomplete="off" spellcheck="false"></label>
+        <button type="button" id="cs-fix-go" class="cs-fix-go">Move the work</button>
+      </div>
+      <p id="cs-fix-msg" class="cs-fix-msg" role="status"></p>
+    </section>
   </div>
 
   <!-- 🖥️ SLIDE MODE (teaching only, Marcos 10/30): data/slides.js — worked examples whose numbers are on no question and
@@ -529,7 +541,7 @@
      aloud instead), and the player. After kokoro-voice.js (video.js stops a video when the site speaks), before script.js. -->
 <script src="data/videos.js?v=1dcad845"></script>
 <script src="video.js?v=nbt1"></script>
-<script src="script.js?v=wr3"></script>
-<script src="class-scores.js?v=wr2"></script>
+<script src="script.js?v=wr4"></script>
+<script src="class-scores.js?v=wr6"></script>
 </body>
 </html>

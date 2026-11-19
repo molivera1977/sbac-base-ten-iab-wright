@@ -1279,3 +1279,80 @@ input.entry-input.incorrect { background: #f8d7da; border-color: #dc3545; color:
 .cs-q { font-family: Andika, system-ui, sans-serif; font-size: 0.92rem; color: #333; margin-top: 3px; line-height: 1.4; }
 .cs-note { font-size: 0.85rem; color: #666; margin: 10px 0 0; }
 @media (max-width: 600px) { .cs-ago { float: none; display: block; } .cs-table, .cs-heat { font-size: 0.84rem; } }
+
+/* 🔎 WHAT EACH STUDENT PICKED (Marcos 11/18): every ✓ / ✗ and question number is a button; the box opens under the map */
+.cs-hint { font-size: 0.86rem; color: #555; margin: 0 0 8px; }
+.cs-heat td:has(> .h-cell), .cs-heat thead th:has(> .h-qbtn) { padding: 0; }
+.h-cell, .cs-heat .h-qbtn { font: inherit; color: inherit; background: none; border: 0; width: 100%; min-height: 30px; padding: 5px 1px; cursor: pointer; }
+.h-cell:hover, .cs-heat .h-qbtn:hover { background: rgba(0, 0, 0, 0.06); }
+.h-cell:focus-visible, .h-qbtn:focus-visible { outline: 3px solid var(--primary); outline-offset: -3px; }
+.h-cell.on, .cs-heat .h-qbtn.on { outline: 3px solid var(--primary-dark); outline-offset: -3px; background: rgba(0, 0, 0, 0.08); }
+.cs-rank-picks { font: inherit; font-size: 0.84rem; font-weight: 700; margin-top: 6px; padding: 4px 10px; border-radius: 8px; cursor: pointer;
+                 background: #fff; color: var(--primary); border: 2px solid #c5d3ea; }
+.cs-rank-picks.on { background: var(--primary); color: #fff; border-color: var(--primary); }
+.cs-qbox { margin-top: 12px; background: #fff; border: 2px solid var(--primary); border-radius: 12px; padding: 12px 14px; }
+.cs-qbox-head { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-bottom: 8px; }
+.cs-qbox-head b { font-size: 1.05rem; color: var(--primary-dark); }
+.cs-qbox-skill { font-size: 0.85rem; color: #555; font-style: italic; }
+.cs-qbox-x { margin-left: auto; font: inherit; font-weight: 700; background: #f4f4f4; border: 1px solid #ccc; border-radius: 8px; padding: 2px 10px; cursor: pointer; }
+.cs-student { border-radius: 10px; padding: 8px 12px; margin-bottom: 10px; }
+.cs-student.ok { background: #eafaf1; border: 1px solid #b7e4c7; }
+.cs-student.no { background: #fdecea; border: 1px solid #f5c2bd; }
+.cs-student p { margin: 0 0 4px; }
+.cs-student p span { color: #666; font-size: 0.85rem; }
+.cs-miss { background: #fff; border-radius: 8px; padding: 6px 10px; margin-top: 6px; font-family: Andika, system-ui, sans-serif; }
+.cs-miss p { margin: 2px 0; }
+.cs-miss-q span { font-weight: 700; color: #555; }
+.cs-miss-pick b { color: #c0392b; }
+.cs-miss-right b { color: #1e7e46; }
+.cs-slip { display: inline-block; font-size: 0.8rem; font-weight: 700; background: #fff3b0; color: #7d6608; border-radius: 999px; padding: 0 8px; margin-left: 4px; }
+.cs-qbox-ask { font-family: Andika, system-ui, sans-serif; border-top: 1px dashed #ddd; padding-top: 6px; }
+.cs-qbox-label { font-size: 0.8rem; font-weight: 700; color: #777; margin: 0; text-transform: uppercase; letter-spacing: 0.03em; }
+.cs-picks { border-top: 1px dashed #ddd; margin-top: 8px; padding-top: 6px; }
+.cs-picks h5 { margin: 4px 0 6px; font-size: 0.98rem; color: var(--primary-dark); }
+.cs-picks h5 span { font-weight: 400; font-size: 0.82rem; color: #666; }
+.pk-right { margin: 0 0 6px; color: #1e7e46; }
+.pk-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.pk-row { display: grid; grid-template-columns: 1fr minmax(60px, 120px) auto; align-items: center; gap: 4px 10px; background: #fafafa; border: 1px solid #eee; border-radius: 8px; padding: 6px 10px; }
+.pk-row.pk-top { border-color: #e74c3c; background: #fdecea; }
+.pk-label b { color: #c0392b; }
+.pk-label em { font-style: normal; font-size: 0.78rem; font-weight: 700; color: #fff; background: #c0392b; border-radius: 999px; padding: 0 8px; margin-left: 4px; }
+.pk-q { font-family: Andika, system-ui, sans-serif; font-size: 0.85rem; color: #555; margin-top: 2px; }
+.pk-bar { height: 10px; background: #eee; border-radius: 999px; overflow: hidden; }
+.pk-bar i { display: block; height: 100%; background: #e67e22; }
+.pk-n { min-width: 1.5em; text-align: right; }
+.pk-names { grid-column: 1 / -1; font-size: 0.85rem; color: #444; }
+.pk-blank { margin: 6px 0 0; font-size: 0.88rem; color: #666; }
+
+/* ✏️ FIX A NAME (Marcos 11/18) */
+.cs-fix { margin-top: 18px; background: #fffdf3; border: 2px solid #f0e2a8; border-radius: 12px; padding: 10px 14px; }
+.cs-fix-note { font-size: 0.88rem; color: #555; margin: 0 0 8px; }
+.cs-fix-row { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 8px 12px; }
+.cs-fix-row label { display: grid; gap: 3px; font-size: 0.85rem; font-weight: 700; color: #444; }
+.cs-fix-row select, .cs-fix-row input { font: inherit; font-weight: 400; font-size: 0.95rem; padding: 6px 8px; border: 2px solid #c5d3ea; border-radius: 8px; min-width: 150px; background: #fff; }
+.cs-fix-go { font: inherit; font-weight: 700; padding: 8px 14px; border-radius: 9px; cursor: pointer; background: var(--primary); color: #fff; border: 2px solid var(--primary); }
+.cs-fix-go:disabled { opacity: 0.6; cursor: wait; }
+.cs-fix-msg { min-height: 1.2em; margin: 8px 0 0; font-weight: 700; color: var(--primary-dark); }
+@media (max-width: 600px) { .pk-row { grid-template-columns: 1fr auto; } .pk-bar { display: none; } .cs-fix-row label, .cs-fix-row select, .cs-fix-row input { width: 100%; } }
+
+/* 📐 STANDARDS HEAT MAP · ⏱ TIME (Marcos 11/18) */
+.cs-stdmap { border-collapse: collapse; width: 100%; font-family: Lexend, system-ui, sans-serif; font-size: 0.92rem; }
+.cs-stdmap th, .cs-stdmap td { border: 1px solid #eee; padding: 6px 8px; text-align: center; }
+.cs-stdmap thead th { background: #f4f0ff; color: var(--primary-dark); }
+.cs-stdmap tbody th, .cs-stdmap tfoot th { text-align: left; white-space: nowrap; font-weight: 600; position: sticky; left: 0; background: #fff; z-index: 1; }
+.cs-stdmap tfoot td, .cs-stdmap tfoot th { font-weight: 800; border-top: 2px solid #ccc; }
+.cs-std-q { display: block; font-size: 0.72rem; font-weight: 400; color: #666; }
+.cs-std-h { margin-top: 18px; }
+.h-time, .h-left { white-space: nowrap; color: #444; }
+.cs-heat td:has(> .h-cell), .cs-heat thead th:has(> .h-qbtn) { min-width: 26px; }
+.cs-heat .h-time, .cs-heat .h-left { padding: 5px 4px; }
+.cs-heat tfoot td { padding: 5px 1px; font-size: 0.8rem; }   /* "100" in the % row set every column's width (11/18) */
+/* each standard says what it is (11/18) */
+.cs-std-name { display: block; font-size: 0.74rem; font-weight: 600; color: #333; line-height: 1.25; margin-top: 2px; }
+.cs-std-list { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; font-size: 0.88rem; }
+.cs-std-list li { background: #faf8ff; border: 1px solid #e6e0f5; border-radius: 10px; padding: 7px 12px; }
+.cs-std-list b { color: var(--primary-dark); }
+.cs-std-qs { color: #666; font-size: 0.82rem; }
+.cs-std-words { display: block; margin-top: 2px; color: #333; }
+.cs-std-skills { display: block; margin-top: 3px; color: #555; font-style: italic; }
+.cs-qbox-pic { margin: 6px 0; }

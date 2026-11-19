@@ -130,19 +130,22 @@ const SHEET_URL = 'https://script.google.com/macros/s/AKfycby0XszjRmp0R2pG5C2dHi
 
 let tabSwitchCount = 0;
 
-/* One saved miss: "[ID] (Skill) question (picked: answer)" — the standard every
-   review uses. Skill comes from data/skills.js by question id, so misses restored
+/* One saved miss: "[ID] (Skill) question (picked: answer) (right: answer)" — the standard every
+   review uses, plus the right answer (Marcos 11/18, "what each student picked" on 📊 Class Scores: a Warm-Up or
+   Practice version has its own numbers, so the right answer the student should have picked is saved with the miss).
+   Skill comes from data/skills.js by question id, so misses restored
    from an older saved attempt still get tagged (a True/False row "A12.2" falls back to its table's "A12").
    " | " separates entries, so it is swapped out of the pick just in case; a stem's line breaks become spaces. */
 function skillOf(id) {
   const S = window.SKILLS || {};
   return S[id] || S[String(id).replace(/\.\d+$/, '')];
 }
+const missText = v => String(v).replace(/\s*\|\s*/g, ' / ').replace(/\s+/g, ' ').trim();
 function missEntry(m) {
   const skill  = m.skill || skillOf(m.id) || 'Unsorted';
-  const picked = m.yourAnswer == null || m.yourAnswer === '' ? '' :
-    ` (picked: ${String(m.yourAnswer).replace(/\s*\|\s*/g, ' / ').replace(/\s+/g, ' ').trim()})`;
-  return `[${m.id}] (${skill}) ${String(m.q).replace(/\s*\|\s*/g, ' / ').replace(/\s+/g, ' ').trim()}${picked}`;
+  const picked = m.yourAnswer == null || m.yourAnswer === '' ? '' : ` (picked: ${missText(m.yourAnswer)})`;
+  const right  = m.correct == null || m.correct === '' ? '' : ` (right: ${missText(m.correct)})`;
+  return `[${m.id}] (${skill}) ${missText(m.q)}${picked}${right}`;
 }
 
 /* What the sheet's "form" column says: Warm-Up · Practice · Test Form A · Test Form B, and "— Retake" on a
