@@ -166,6 +166,36 @@
     return blank(v) || !isFinite(n) || n < 0 ? '—' : String(n);
   };
 
+  /* 📍 RIGHT NOW (Marcos 11/21: "All six", from his dashboard): for a student in the middle of a part — a ✓ / ✗ box per
+     question in the IAB's order (her sheet hands over the answers so far; a row from before 11/21 has none, so only its
+     misses show ✗), the questions missed so far in the words the student saw, and the share right so far. */
+  function liveAnswers(r) {
+    const out = {};
+    (Array.isArray(r.answers) ? r.answers : []).forEach(a => { if (Array.isArray(a) && a[0]) out[String(a[0])] = Number(a[1]) ? 1 : 0; });
+    missedOf(r.wrongQuestions).forEach(id => { out[id] = 0; });   // a miss is a miss (a table's wrong row too)
+    return out;
+  }
+  function liveShare(r) {
+    const a = Object.values(liveAnswers(r));
+    const right = a.length && Array.isArray(r.answers) && r.answers.length ? a.filter(Boolean).length : Number(r.score) || 0;
+    const answered = Array.isArray(r.answers) && r.answers.length ? a.length : right + missedOf(r.wrongQuestions).size;
+    return answered ? right / answered : 1;
+  }
+  function liveStrip(w) {
+    const a = liveAnswers(w.r);
+    return `<span class="cs-strip" aria-label="Each question so far">${spotsOf(w.part).map((q, i) => {
+      const x = a[q.id];
+      return `<span class="cs-sq ${x == null ? 'sq-wait' : x ? 'sq-ok' : 'sq-miss'}" title="Question ${i + 1}: ${x == null ? 'not answered yet' : x ? 'right' : 'wrong'}"><i>${i + 1}</i>${x == null ? '' : x ? '✓' : '✗'}</span>`;
+    }).join('')}</span>`;
+  }
+  function liveMissed(w) {
+    const spots = spotsOf(w.part).map(q => q.id);
+    const byId = {};
+    parseMisses(w.r.wrongQuestions).forEach(e => { (byId[e.id] = byId[e.id] || []).push(e.q); });
+    const ids = Object.keys(byId).sort((x, y) => spots.indexOf(x) - spots.indexOf(y));
+    return ids.length ? `<p class="cs-live-miss">Missed: ${ids.map(id => `<b>${spots.indexOf(id) + 1}.</b> ${esc(byId[id].join(' / '))}`).join(' · ')}</p>` : '';
+  }
+
   function cellHTML(c) {
     if (!c) return '<span class="cs-none">—</span>';
     const n = c.tries.length;
@@ -186,10 +216,10 @@
       c.tries.forEach(t => { last = Math.max(last, finishOf(t)); });
       if (c.now) working.push({ name: st.name, part, r: c.now });
     }));
-    working.sort((a, b) => atOf(b.r) - atOf(a.r));
+    working.sort((a, b) => liveShare(a.r) - liveShare(b.r) || atOf(b.r) - atOf(a.r));   // 📍 the lowest share right first (11/21)
     const sum = `<p class="cs-sum"><b>${classList.length}</b> ${classList.length === 1 ? 'student' : 'students'} · <b>${finished}</b> finished ${finished === 1 ? 'try' : 'tries'} · <b>${working.length}</b> working now${last ? ` · last finished ${when(last)}` : ''}</p>`;
-    const workingHTML = working.length ? `<h3 class="cs-h">Working now <span>saved after every answer · updates by itself every 20 seconds</span></h3>
-      <ul class="cs-working">${working.map(w => `<li><b>${esc(w.name)}</b> · ${FORM_NAMES[w.part]} · on ${onText(w.r)} · ${Number(w.r.score) || 0} right so far <span class="cs-ago">${ago(atOf(w.r))}</span></li>`).join('')}</ul>` : '';
+    const workingHTML = working.length ? `<h3 class="cs-h">Working now <span>saved after every answer · lowest share right first · updates by itself every 20 seconds</span></h3>
+      <ul class="cs-working">${working.map(w => `<li><b>${esc(w.name)}</b> · ${FORM_NAMES[w.part]} · on ${onText(w.r)} · ${Number(w.r.score) || 0} right so far <span class="cs-ago">${ago(atOf(w.r))}</span>${liveStrip(w)}${liveMissed(w)}</li>`).join('')}</ul>` : '';
     const table = `<div class="cs-wrap"><table class="cs-table"><thead><tr><th scope="col">Student</th>${FORMS.map(f => `<th scope="col">${FORM_NAMES[f]}</th>`).join('')}</tr></thead>
       <tbody>${classList.map(st => `<tr><th scope="row">${esc(st.name)}</th>${FORMS.map(f => `<td>${cellHTML(st.parts[f])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
     return `${sum}${workingHTML}

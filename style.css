@@ -1241,6 +1241,14 @@ input.entry-input.incorrect { background: #f8d7da; border-color: #dc3545; color:
 .cs-working { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
 .cs-working li { background: #eef7ff; border: 1px solid #b9dcf7; border-radius: 10px; padding: 7px 12px; font-size: 0.95rem; }
 .cs-ago { float: right; color: #777; font-size: 0.85rem; }
+/* 📍 Right Now (11/21): each question so far ✓ / ✗ / not yet, the misses in words */
+.cs-strip { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 6px; }
+.cs-sq { display: inline-flex; flex-direction: column; align-items: center; min-width: 26px; padding: 1px 3px; border-radius: 6px; font-size: 13px; line-height: 1.15; border: 1px solid #d0d7de; background: #fff; }
+.cs-sq i { font-style: normal; font-size: 11px; color: #555; }
+.cs-sq.sq-ok { background: #dcfce7; border-color: #86efac; }
+.cs-sq.sq-miss { background: #fee2e2; border-color: #fca5a5; }
+.cs-sq.sq-wait { color: #999; }
+.cs-live-miss { margin: 4px 0 0; font-size: 14px; color: #a61b1b; line-height: 1.35; }
 .cs-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid #ddd; border-radius: 12px; background: #fff; }
 .cs-table, .cs-heat { border-collapse: collapse; width: 100%; font-family: Lexend, system-ui, sans-serif; font-size: 0.92rem; }
 .cs-table th, .cs-table td { border-bottom: 1px solid #eee; padding: 8px 10px; text-align: left; vertical-align: top; }

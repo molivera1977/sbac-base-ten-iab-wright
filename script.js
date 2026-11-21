@@ -2312,6 +2312,9 @@ const app = {
       this.lastMissed = true;
       this.missedQuestions.push(...this._missEntries(q, type, r));
     }
+    // 📍 Right Now (Marcos 11/21: "All six"): every scored answer rides in the log, right or missed, so Class Scores shows a
+    // ✓ / ✗ box per question while the student works (her sheet hands Class Scores these answers for a try in progress)
+    if (!isStep && !isTwin) logEvent('answer', { id: q.id, ok: correct });
 
     // The Warm-Up and the Practice teach: each row / option / choice marked right or wrong, the right one shown, the
     // mistake named, why. The tests: right or wrong only — the student's own number or choice is marked, a True/False
