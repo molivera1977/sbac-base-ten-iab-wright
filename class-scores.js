@@ -3,7 +3,8 @@
    Marcos: "create a version for my grade partner similar to how my wife had with heat map and everything data wise".
    Mrs. Olivera's Class Scores (sbac-5th-add-subtract-fractions-fiab/app.js), for this site's four parts:
    - Working now: who is in the middle of a part, the question they are on, how many right so far, how long ago
-     (the site saves after every answer);
+     (the site saves after every answer); a box per question (tap one: that student's question, pick and right answer,
+     Marcos 11/23) and the misses so far, one question a line;
    - Scores: one row per student; each part = 1st try → latest try, how many tries, the best (a test retake is a try);
    - Question heat map: a part · 1st try or latest try; one row per student who finished it, one column per question
      (1–15, the real IAB's order); ✓ right, ✗ missed; the bottom row = % of those students who got it right
@@ -181,19 +182,78 @@
     const answered = Array.isArray(r.answers) && r.answers.length ? a.length : right + missedOf(r.wrongQuestions).size;
     return answered ? right / answered : 1;
   }
+  /* 🔎 TAP A BOX (Marcos 11/23: "im suppose to be able to click on them", on Mrs. Wright's Working now): every box is a
+     button. It opens a box right under that student's row, like the heat map's ✓ / ✗ do for a finished try: a ✗ = the
+     question the student saw, what they picked, the named mistake, the right answer; a ✓ = got it right; an empty box =
+     not answered yet (a try begun before 11/21 saved only its misses, so there a right answer is an empty box too). */
+  const liveKey = w => `${keyOf(w.name)}|${w.part}`;
+  let workingList = [];   // the Working now list on the screen: { name, part, r }
+  let liveOpen = null;    // the open box: { key, q } (q = 0-based question)
+  const savedAnswers = r => Array.isArray(r.answers) && r.answers.length > 0;
   function liveStrip(w) {
-    const a = liveAnswers(w.r);
-    return `<span class="cs-strip" aria-label="Each question so far">${spotsOf(w.part).map((q, i) => {
+    const a = liveAnswers(w.r), k = esc(liveKey(w));
+    return `<span class="cs-strip" role="group" aria-label="${esc(w.name)}: each question so far. Tap one to see it.">${spotsOf(w.part).map((q, i) => {
       const x = a[q.id];
-      return `<span class="cs-sq ${x == null ? 'sq-wait' : x ? 'sq-ok' : 'sq-miss'}" title="Question ${i + 1}: ${x == null ? 'not answered yet' : x ? 'right' : 'wrong'}"><i>${i + 1}</i>${x == null ? '' : x ? '✓' : '✗'}</span>`;
-    }).join('')}</span>`;
+      return `<button type="button" class="cs-sq ${x == null ? 'sq-wait' : x ? 'sq-ok' : 'sq-miss'}" data-live="${k}" data-q="${i}" aria-expanded="false" title="${esc(w.name)} · question ${i + 1}: ${x == null ? 'not answered yet' : x ? 'right' : 'wrong'}"><i>${i + 1}</i>${x == null ? '' : x ? '✓' : '✗'}</button>`;
+    }).join('')}</span><div class="cs-qbox cs-livebox" data-live-box="${k}" hidden></div>`;
   }
+  // The box for question i (0-based) of one student working now
+  function liveBoxHTML(w, i) {
+    const q = spotsOf(w.part)[i];
+    const x = liveAnswers(w.r)[q.id];
+    const first = String(w.name).split(' ')[0];
+    const many = versionsOf(w.part).length > 1;
+    const mine = parseMisses(w.r.wrongQuestions).filter(e => e.id === q.id);
+    const who = x === 0
+      ? (mine.some(e => e.picked)
+        ? `<div class="cs-student no"><p><b>${esc(w.name)}</b> ✗ missed it <span>(working now)</span></p>${mine.map(e => missHTML(w.part, e, first)).join('')}</div>`
+        : `<div class="cs-student no"><p><b>${esc(w.name)}</b> ✗ missed it <span>(working now)</span> · no answer saved for this question.</p></div>`)
+      : x === 1
+        ? `<div class="cs-student ok"><p><b>${esc(w.name)}</b> ✓ got it right <span>(working now)</span></p></div>`
+        : savedAnswers(w.r)
+          ? `<div class="cs-student wait"><p><b>${esc(w.name)}</b> has not answered it yet.</p></div>`
+          : `<div class="cs-student wait"><p><b>${esc(w.name)}</b>: no ✗ saved for this question.</p><p class="cs-old-try">This try began before the site saved right answers, so it may be right or not answered yet.</p></div>`;
+    return `<div class="cs-qbox-head"><b>Question ${i + 1}</b><span class="cs-qbox-skill">${esc(skillOf(q.id) || '')}</span>
+        <button type="button" class="cs-qbox-x" data-live-close aria-label="Close question ${i + 1}">✕</button></div>
+      ${who}
+      <div class="cs-qbox-ask"><p class="cs-qbox-label">${many ? 'Version 1 of this question' : 'The question'}</p>
+        <p class="key-ask">${formatMathText(q.q)}</p>${q.pic && window.M2V ? `<div class="key-pic cs-qbox-pic">${M2V.picHTML(q.pic)}</div>` : ''}${app._keyAnswerHTML(q)}</div>`;
+  }
+  // Open the box for one student's question i, or close it when that one is already open
+  function toggleLive(key, i) {
+    liveOpen = liveOpen && liveOpen.key === key && liveOpen.q === i ? null : { key, q: i };
+    drawLive();
+  }
+  // Show the open box (if its student is still working now) under that student; mark its button
+  function drawLive() {
+    const w = liveOpen ? workingList.find(x => liveKey(x) === liveOpen.key) : null;
+    if (!w || !spotsOf(w.part)[liveOpen.q]) liveOpen = null;
+    document.querySelectorAll('#class-screen .cs-livebox').forEach(box => {
+      const on = !!liveOpen && box.dataset.liveBox === liveOpen.key;
+      box.innerHTML = on ? liveBoxHTML(w, liveOpen.q) : '';
+      box.hidden = !on;
+    });
+    document.querySelectorAll('#class-screen .cs-sq[data-live]').forEach(b => {
+      const on = !!liveOpen && b.dataset.live === liveOpen.key && b.dataset.q === String(liveOpen.q);
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-expanded', String(on));
+    });
+  }
+  /* The misses so far, easy to read (Marcos 11/23): one question a line, in the IAB's order; a True/False table's wrong
+     rows each on their own line ("Row 2: …"); what the student picked and the right answer after each. */
   function liveMissed(w) {
     const spots = spotsOf(w.part).map(q => q.id);
     const byId = {};
-    parseMisses(w.r.wrongQuestions).forEach(e => { (byId[e.id] = byId[e.id] || []).push(e.q); });
+    parseMisses(w.r.wrongQuestions).forEach(e => { (byId[e.id] = byId[e.id] || []).push(e); });
     const ids = Object.keys(byId).sort((x, y) => spots.indexOf(x) - spots.indexOf(y));
-    return ids.length ? `<p class="cs-live-miss">Missed: ${ids.map(id => `<b>${spots.indexOf(id) + 1}.</b> ${esc(byId[id].join(' / '))}`).join(' · ')}</p>` : '';
+    if (!ids.length) return '';
+    const says = e => {
+      const right = rightOf(questionOf(w.part, e), e);
+      return `${e.row ? `<span class="lm-row">Row ${e.row}:</span> ` : ''}<span class="lm-q">${formatMathText(e.q)}</span>`
+        + `${e.picked ? ` <span class="lm-pick">✗ picked <b>${formatMathText(e.picked)}</b></span>` : ''}`
+        + `${right ? ` <span class="lm-right">✓ right answer <b>${formatMathText(right)}</b></span>` : ''}`;
+    };
+    return `<div class="cs-live-miss"><p class="lm-h">Missed so far:</p><ol class="lm-list">${ids.map(id => `<li><b class="lm-n">${spots.indexOf(id) + 1}.</b><span class="lm-lines">${byId[id].map(e => `<span class="lm-line">${says(e)}</span>`).join('')}</span></li>`).join('')}</ol></div>`;
   }
 
   function cellHTML(c) {
@@ -217,8 +277,10 @@
       if (c.now) working.push({ name: st.name, part, r: c.now });
     }));
     working.sort((a, b) => liveShare(a.r) - liveShare(b.r) || atOf(b.r) - atOf(a.r));   // 📍 the lowest share right first (11/21)
+    workingList = working;
     const sum = `<p class="cs-sum"><b>${classList.length}</b> ${classList.length === 1 ? 'student' : 'students'} · <b>${finished}</b> finished ${finished === 1 ? 'try' : 'tries'} · <b>${working.length}</b> working now${last ? ` · last finished ${when(last)}` : ''}</p>`;
     const workingHTML = working.length ? `<h3 class="cs-h">Working now <span>saved after every answer · lowest share right first · updates by itself every 20 seconds</span></h3>
+      <p class="cs-hint">🔎 Tap a numbered box to see that question: what the student picked and the right answer.</p>
       <ul class="cs-working">${working.map(w => `<li><b>${esc(w.name)}</b> · ${FORM_NAMES[w.part]} · on ${onText(w.r)} · ${Number(w.r.score) || 0} right so far <span class="cs-ago">${ago(atOf(w.r))}</span>${liveStrip(w)}${liveMissed(w)}</li>`).join('')}</ul>` : '';
     const table = `<div class="cs-wrap"><table class="cs-table"><thead><tr><th scope="col">Student</th>${FORMS.map(f => `<th scope="col">${FORM_NAMES[f]}</th>`).join('')}</tr></thead>
       <tbody>${classList.map(st => `<tr><th scope="row">${esc(st.name)}</th>${FORMS.map(f => `<td>${cellHTML(st.parts[f])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
@@ -522,7 +584,9 @@
           body.innerHTML = '<p class="cs-msg">No work yet. Scores show up here as soon as students start answering.</p>';
           return;
         }
+        if (!quiet) liveOpen = null;   // ↻ Refresh or a new visit starts closed; the 20-second update keeps the open box
         body.innerHTML = classHTML();
+        drawLive();
         const hasFinished = p => classList.some(st => st.parts[p] && st.parts[p].tries.length);
         if (!hasFinished(heatPart)) heatPart = FORMS.find(hasFinished) || heatPart;
         showHeat(heatPart);
@@ -561,6 +625,9 @@
   document.addEventListener('click', e => {
     const screen = $('class-screen');
     if (!screen || !screen.contains(e.target)) return;
+    const sq = e.target.closest('.cs-sq[data-live]');
+    if (sq) { toggleLive(sq.dataset.live, Number(sq.dataset.q)); return; }
+    if (e.target.closest('[data-live-close]')) { liveOpen = null; drawLive(); return; }
     const h = e.target.closest('[data-heat]');
     if (h) { showHeat(h.dataset.heat); return; }
     const m = e.target.closest('[data-mode]');
