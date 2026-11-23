@@ -176,11 +176,23 @@
     missedOf(r.wrongQuestions).forEach(id => { out[id] = 0; });   // a miss is a miss (a table's wrong row too)
     return out;
   }
+  /* 📊 SCORE SO FAR (Marcos 11/23: "there's no score so far like a percentage"): right ÷ the questions answered so far,
+     not ÷ all 15 (his dashboard's rule, 11/18). The site adds 1 to the score for each question right and saves each
+     question missed, so answered = score + questions missed — the same for a try begun before 11/21 (no answers saved),
+     after, or both (picked up again after 11/21). The list's order uses the same share. */
+  function liveScore(r) {
+    const right = Math.max(0, Math.floor(Number(r.score)) || 0);
+    return { right, answered: right + missedOf(r.wrongQuestions).size };
+  }
   function liveShare(r) {
-    const a = Object.values(liveAnswers(r));
-    const right = a.length && Array.isArray(r.answers) && r.answers.length ? a.filter(Boolean).length : Number(r.score) || 0;
-    const answered = Array.isArray(r.answers) && r.answers.length ? a.length : right + missedOf(r.wrongQuestions).size;
-    return answered ? right / answered : 1;
+    const s = liveScore(r);
+    return s.answered ? s.right / s.answered : 1;
+  }
+  function soFarHTML(r) {
+    const s = liveScore(r);
+    if (!s.answered) return 'no answers yet';
+    const pct = Math.round(s.right / s.answered * 100);
+    return `${s.right} of ${s.answered} right so far <span class="cs-pct ${heatClass(pct)}" title="Right out of the questions answered so far">${pct}%</span>`;
   }
   /* 🔎 TAP A BOX (Marcos 11/23: "im suppose to be able to click on them", on Mrs. Wright's Working now): every box is a
      button. It opens a box right under that student's row, like the heat map's ✓ / ✗ do for a finished try: a ✗ = the
@@ -281,7 +293,7 @@
     const sum = `<p class="cs-sum"><b>${classList.length}</b> ${classList.length === 1 ? 'student' : 'students'} · <b>${finished}</b> finished ${finished === 1 ? 'try' : 'tries'} · <b>${working.length}</b> working now${last ? ` · last finished ${when(last)}` : ''}</p>`;
     const workingHTML = working.length ? `<h3 class="cs-h">Working now <span>saved after every answer · lowest share right first · updates by itself every 20 seconds</span></h3>
       <p class="cs-hint">🔎 Tap a numbered box to see that question: what the student picked and the right answer.</p>
-      <ul class="cs-working">${working.map(w => `<li><b>${esc(w.name)}</b> · ${FORM_NAMES[w.part]} · on ${onText(w.r)} · ${Number(w.r.score) || 0} right so far <span class="cs-ago">${ago(atOf(w.r))}</span>${liveStrip(w)}${liveMissed(w)}</li>`).join('')}</ul>` : '';
+      <ul class="cs-working">${working.map(w => `<li><b>${esc(w.name)}</b> · ${FORM_NAMES[w.part]} · on ${onText(w.r)} · ${soFarHTML(w.r)} <span class="cs-ago">${ago(atOf(w.r))}</span>${liveStrip(w)}${liveMissed(w)}</li>`).join('')}</ul>` : '';
     const table = `<div class="cs-wrap"><table class="cs-table"><thead><tr><th scope="col">Student</th>${FORMS.map(f => `<th scope="col">${FORM_NAMES[f]}</th>`).join('')}</tr></thead>
       <tbody>${classList.map(st => `<tr><th scope="row">${esc(st.name)}</th>${FORMS.map(f => `<td>${cellHTML(st.parts[f])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
     return `${sum}${workingHTML}

@@ -1261,12 +1261,12 @@ input.entry-input.incorrect { background: #f8d7da; border-color: #dc3545; color:
 .cs-live-miss .lm-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 3px; }
 .cs-live-miss li { display: grid; grid-template-columns: 1.8em 1fr; gap: 6px; align-items: baseline; background: #fff; border-left: 3px solid #fca5a5; border-radius: 4px; padding: 2px 8px; }
 .cs-live-miss .lm-n { color: #a61b1b; }
-.cs-live-miss .lm-line { display: block; }
+.cs-live-miss .lm-line { display: block; min-width: 0; overflow-wrap: anywhere; }
 .cs-live-miss .lm-line + .lm-line { margin-top: 2px; }
 .cs-live-miss .lm-row { font-weight: 700; color: #555; }
-.cs-live-miss .lm-pick { white-space: nowrap; color: #a61b1b; margin-left: 6px; }
+.cs-live-miss .lm-pick { color: #a61b1b; margin-left: 6px; }
 .cs-live-miss .lm-pick b { color: #c0392b; }
-.cs-live-miss .lm-right { white-space: nowrap; color: #1e7e46; margin-left: 6px; }
+.cs-live-miss .lm-right { color: #1e7e46; margin-left: 6px; }
 .cs-live-miss .lm-right b { color: #1e7e46; }
 .cs-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid #ddd; border-radius: 12px; background: #fff; }
 .cs-table, .cs-heat { border-collapse: collapse; width: 100%; font-family: Lexend, system-ui, sans-serif; font-size: 0.92rem; }
