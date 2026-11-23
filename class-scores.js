@@ -650,12 +650,55 @@
     }
     stopActiveSpeech();
     this.show('class-screen');
+    pickFor = null;
+    drawPick();
     load(pin);
   };
+
+  /* 👀 TRY IT · ✅ ANSWER KEY on Class Scores (Marcos 11/23: the reading sites' page, "The first two"): a box under the
+     bar — a part, a version, then go. The pick is the Teacher screen's own (one pick for both). The key opened from here
+     says "← Class Scores" and goes back here; opened from the Teacher screen it says "← Teacher screen". */
+  let pickFor = null;   // 'try' | 'key' | null (the box shut)
+  function drawPick() {
+    const box = $('cs-pick');
+    if (!box) return;
+    ['try', 'key'].forEach(w => {
+      const b = $('cs-' + w);
+      if (b) { b.setAttribute('aria-expanded', String(pickFor === w)); b.classList.toggle('on', pickFor === w); }
+    });
+    box.hidden = !pickFor;
+    if (!pickFor) { box.innerHTML = ''; return; }
+    const t = app._teacherPick(), count = versionCount(t.form), label = esc(app._teachLabel(t.form, t.version));
+    const btn = (on, text, data) => `<button type="button" class="t-pick${on ? ' on' : ''}" ${data} aria-pressed="${on}">${text}</button>`;
+    box.innerHTML = `<p class="cs-pick-h"><b>${pickFor === 'try' ? '👀 Try it as a student' : '✅ Answer key'}:</b> pick a part${count > 1 ? ' and a version' : ''}.</p>
+      <div class="t-row" role="group" aria-label="Part">${TEACH_PARTS.map(f => btn(f === t.form, `${formOpen(f) ? '' : '🔒 '}${FORM_NAMES[f]}`, `data-cs-part="${f}"`)).join('')}</div>
+      ${count > 1 ? `<div class="t-row" role="group" aria-label="Version">${Array.from({ length: count }, (_, i) => i + 1).map(v => btn(v === t.version, `Version ${v}`, `data-cs-ver="${v}"`)).join('')}</div>` : ''}
+      <button type="button" class="cs-pick-go" data-cs-go>${pickFor === 'try' ? `👀 Try it: ${label}` : `✅ Open the key: ${label}`}</button>`;
+  }
+  app.csPick = function (what) { pickFor = pickFor === what ? null : what; drawPick(); };
+  function keyBackTo(scores) {
+    const b = $('key-back-btn');
+    if (!b) return;
+    b.textContent = scores ? '← Class Scores' : '← Teacher screen';
+    b.onclick = scores ? () => app.openClassScores() : () => app.openTeacher();
+  }
+  const teacherKey0 = app.teacherKey;
+  app.teacherKey = function (fromScores) { teacherKey0.call(this); keyBackTo(fromScores === true); };
 
   document.addEventListener('click', e => {
     const screen = $('class-screen');
     if (!screen || !screen.contains(e.target)) return;
+    const part = e.target.closest('[data-cs-part]');
+    if (part) { app.teacherPick({ form: part.dataset.csPart }); drawPick(); return; }
+    const ver = e.target.closest('[data-cs-ver]');
+    if (ver) { app.teacherPick({ version: Number(ver.dataset.csVer) }); drawPick(); return; }
+    if (e.target.closest('[data-cs-go]')) {
+      const go = pickFor;
+      pickFor = null;
+      drawPick();
+      if (go === 'key') app.teacherKey(true); else app.teacherTry();
+      return;
+    }
     const sq = e.target.closest('.cs-sq[data-live]');
     if (sq) { toggleLive(sq.dataset.live, Number(sq.dataset.q)); return; }
     if (e.target.closest('[data-live-close]')) { liveOpen = null; drawLive(); return; }

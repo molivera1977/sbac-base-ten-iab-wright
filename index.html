@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Lexend:wght@500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=wr9pct" />
+  <link rel="stylesheet" href="style.css?v=wr9pct-pg1" />
 </head>
 <body>
 <canvas id="confetti-canvas"></canvas>
@@ -432,17 +432,22 @@
   <!-- 📊 CLASS SCORES (class-scores.js): read from Mrs. Wright's Corner with her PIN; nothing is written -->
   <div id="class-screen" class="hidden">
     <div class="t-bar">
-      <span class="t-title">📊 Class Scores</span>
+      <span class="t-title">📊 Class Scores · Base Ten · Mrs. Wright</span>
       <span class="t-note" id="cs-when"></span>
       <span class="cs-acts">
         <button type="button" class="t-exit cs-refresh" onclick="app.openClassScores()">↻ Refresh</button>
+        <button type="button" class="t-exit" id="cs-try" aria-expanded="false" aria-controls="cs-pick" onclick="app.csPick('try')">👀 Try it as a student</button>
+        <button type="button" class="t-exit" id="cs-key" aria-expanded="false" aria-controls="cs-pick" onclick="app.csPick('key')">✅ Answer key</button>
         <button type="button" class="t-exit" onclick="app.backToTeacher()">← Teacher screen</button>
       </span>
     </div>
+    <!-- 👀 / ✅ from Class Scores (Marcos 11/23, like the reading sites): pick a part and a version, then go -->
+    <div id="cs-pick" class="cs-pick" role="region" aria-label="Pick a part and a version" hidden></div>
     <div id="cs-body"></div>
-    <!-- ✏️ FIX A NAME (Marcos 11/18, from the reading sites): outside #cs-body, so ↻ Refresh never wipes what she typed -->
-    <section id="cs-fix" class="cs-fix" hidden aria-labelledby="cs-fix-h">
-      <h3 class="cs-h" id="cs-fix-h">✏️ Fix a name <span>a student who typed their name wrong shows up as another student</span></h3>
+    <!-- ✏️ FIX A NAME (Marcos 11/18, from the reading sites): outside #cs-body, so ↻ Refresh never wipes what she typed;
+         folded until she opens it (11/23, like the reading sites) -->
+    <details id="cs-fix" class="cs-fix" hidden>
+      <summary class="cs-h" id="cs-fix-h">✏️ Fix a misspelled name <span>a student who typed their name wrong shows up as another student</span></summary>
       <p class="cs-fix-note">Move that work to the right name. Every row of that name on your sheet changes. Nothing is deleted. A part the student was in the middle of starts over under the right name.</p>
       <div class="cs-fix-row">
         <label>Name to fix <select id="cs-fix-from"></select></label>
@@ -451,7 +456,7 @@
         <button type="button" id="cs-fix-go" class="cs-fix-go">Move the work</button>
       </div>
       <p id="cs-fix-msg" class="cs-fix-msg" role="status"></p>
-    </section>
+    </details>
   </div>
 
   <!-- 🖥️ SLIDE MODE (teaching only, Marcos 10/30): data/slides.js — worked examples whose numbers are on no question and
@@ -541,7 +546,7 @@
      aloud instead), and the player. After kokoro-voice.js (video.js stops a video when the site speaks), before script.js. -->
 <script src="data/videos.js?v=1dcad845"></script>
 <script src="video.js?v=nbt1"></script>
-<script src="script.js?v=wr4-fair1-rn1"></script>
-<script src="class-scores.js?v=wr10ok"></script>
+<script src="script.js?v=wr4-fair1-rn1-pg1"></script>
+<script src="class-scores.js?v=wr10ok-pg1"></script>
 </body>
 </html>

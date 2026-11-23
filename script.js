@@ -1058,6 +1058,7 @@ const app = {
     ['start-screen','readaloud-screen','directions-screen','quiz-screen','end-screen','scoreboard-screen','teacher-screen','key-screen','slide-screen','class-screen']
       .forEach(s => document.getElementById(s).classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
+    document.body.classList.toggle('cs-page', id === 'class-screen');   // 📊 its own screen: no site title above it (11/23)
     syncFormLabel(id);
     window.scrollTo(0, 0);   // every new screen starts at the top
     window.speechSynthesis.cancel();

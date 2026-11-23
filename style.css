@@ -1233,6 +1233,17 @@ input.entry-input.incorrect { background: #f8d7da; border-color: #dc3545; color:
 .t-act.t-class { display: block; width: 100%; margin: 0 0 6px; background: #f4f0ff; border-color: var(--primary-dark); }
 .t-act.t-class:hover { background: #e9e1ff; }
 .cs-acts { display: flex; gap: 8px; flex-wrap: wrap; }
+/* 📊 Class Scores on its own screen (11/23, like the reading sites): no site title above it; 👀 / ✅ on its bar */
+body.cs-page .container > h1, body.cs-page .container > .welcome-sub { display: none; }
+.cs-acts .t-exit.on { background: #ffc107; color: #3d2e00; }
+.cs-pick { display: grid; gap: 8px; justify-items: start; background: #fffdf3; border: 2px solid #f0e2a8; border-radius: 12px;
+           padding: 10px 14px; margin: -4px 0 14px; }
+.cs-pick[hidden] { display: none; }
+.cs-pick-h { margin: 0; color: #5c4600; }
+.cs-pick-go { font: inherit; font-weight: 700; padding: 8px 14px; border-radius: 9px; cursor: pointer; background: var(--primary);
+              color: #fff; border: 2px solid var(--primary); }
+.cs-fix > summary { cursor: pointer; }
+.cs-fix[open] > summary { margin-bottom: 8px; }
 .cs-msg { text-align: center; font-weight: 700; color: #444; padding: 26px 10px; }
 .cs-err { color: var(--danger); }
 .cs-sum { font-size: 1.02rem; margin: 4px 0 10px; color: #333; }
