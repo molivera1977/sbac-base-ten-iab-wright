@@ -170,12 +170,31 @@
   /* 📍 RIGHT NOW (Marcos 11/21: "All six", from his dashboard): for a student in the middle of a part — a ✓ / ✗ box per
      question in the IAB's order (her sheet hands over the answers so far; a row from before 11/21 has none, so only its
      misses show ✗), the questions missed so far in the words the student saw, and the share right so far. */
-  function liveAnswers(r) {
+  function liveAnswers(r, part) {
     const out = {};
     (Array.isArray(r.answers) ? r.answers : []).forEach(a => { if (Array.isArray(a) && a[0]) out[String(a[0])] = Number(a[1]) ? 1 : 0; });
     missedOf(r.wrongQuestions).forEach(id => { out[id] = 0; });   // a miss is a miss (a table's wrong row too)
+    return Object.assign({}, inOrderRights(r, part) || {}, out);   // what was saved wins
+  }
+  /* 🟩 RIGHT ANSWERS WORKED OUT (Marcos 11/23: "shouldnt the box be green for correct and white if they havent answered it
+     yet"). A try saved before 11/21 kept only its misses. The Warm-Up and the Practice go in order (script.js keepsOrder)
+     and no question can be skipped, so the questions answered are the first (score + questions missed): each of them not
+     missed was right. Only when every miss and every saved answer falls inside those (else null: the row shows only what
+     was saved). The tests are shuffled: null. { id: 1 } for each right one. */
+  function inOrderRights(r, part) {
+    if (!keepsOrder(part)) return null;
+    const ids = spotsOf(part).map(q => q.id);
+    const n = liveScore(r).answered;
+    if (n > ids.length) return null;
+    const first = new Set(ids.slice(0, n));
+    const saved = (Array.isArray(r.answers) ? r.answers : []).map(a => String(a && a[0]));
+    if ([...missedOf(r.wrongQuestions), ...saved].some(id => !first.has(id))) return null;
+    const missed = missedOf(r.wrongQuestions), out = {};
+    ids.slice(0, n).forEach(id => { if (!missed.has(id)) out[id] = 1; });
     return out;
   }
+  // Is an empty box surely "not answered yet"? Yes when the answers were saved, or worked out in order
+  const liveKnown = w => savedAnswers(w.r) || inOrderRights(w.r, w.part) !== null;
   /* 📊 SCORE SO FAR (Marcos 11/23: "there's no score so far like a percentage"): right ÷ the questions answered so far,
      not ÷ all 15 (his dashboard's rule, 11/18). The site adds 1 to the score for each question right and saves each
      question missed, so answered = score + questions missed — the same for a try begun before 11/21 (no answers saved),
@@ -197,13 +216,13 @@
   /* 🔎 TAP A BOX (Marcos 11/23: "im suppose to be able to click on them", on Mrs. Wright's Working now): every box is a
      button. It opens a box right under that student's row, like the heat map's ✓ / ✗ do for a finished try: a ✗ = the
      question the student saw, what they picked, the named mistake, the right answer; a ✓ = got it right; an empty box =
-     not answered yet (a try begun before 11/21 saved only its misses, so there a right answer is an empty box too). */
+     not answered yet (a TEST try begun before 11/21 saved only its misses, so there a right answer may be empty too). */
   const liveKey = w => `${keyOf(w.name)}|${w.part}`;
   let workingList = [];   // the Working now list on the screen: { name, part, r }
   let liveOpen = null;    // the open box: { key, q } (q = 0-based question)
   const savedAnswers = r => Array.isArray(r.answers) && r.answers.length > 0;
   function liveStrip(w) {
-    const a = liveAnswers(w.r), k = esc(liveKey(w));
+    const a = liveAnswers(w.r, w.part), k = esc(liveKey(w));
     return `<span class="cs-strip" role="group" aria-label="${esc(w.name)}: each question so far. Tap one to see it.">${spotsOf(w.part).map((q, i) => {
       const x = a[q.id];
       return `<button type="button" class="cs-sq ${x == null ? 'sq-wait' : x ? 'sq-ok' : 'sq-miss'}" data-live="${k}" data-q="${i}" aria-expanded="false" title="${esc(w.name)} · question ${i + 1}: ${x == null ? 'not answered yet' : x ? 'right' : 'wrong'}"><i>${i + 1}</i>${x == null ? '' : x ? '✓' : '✗'}</button>`;
@@ -212,7 +231,7 @@
   // The box for question i (0-based) of one student working now
   function liveBoxHTML(w, i) {
     const q = spotsOf(w.part)[i];
-    const x = liveAnswers(w.r)[q.id];
+    const x = liveAnswers(w.r, w.part)[q.id];
     const first = String(w.name).split(' ')[0];
     const many = versionsOf(w.part).length > 1;
     const mine = parseMisses(w.r.wrongQuestions).filter(e => e.id === q.id);
@@ -222,7 +241,7 @@
         : `<div class="cs-student no"><p><b>${esc(w.name)}</b> ✗ missed it <span>(working now)</span> · no answer saved for this question.</p></div>`)
       : x === 1
         ? `<div class="cs-student ok"><p><b>${esc(w.name)}</b> ✓ got it right <span>(working now)</span></p></div>`
-        : savedAnswers(w.r)
+        : liveKnown(w)
           ? `<div class="cs-student wait"><p><b>${esc(w.name)}</b> has not answered it yet.</p></div>`
           : `<div class="cs-student wait"><p><b>${esc(w.name)}</b>: no ✗ saved for this question.</p><p class="cs-old-try">This try began before the site saved right answers, so it may be right or not answered yet.</p></div>`;
     return `<div class="cs-qbox-head"><b>Question ${i + 1}</b><span class="cs-qbox-skill">${esc(skillOf(q.id) || '')}</span>
