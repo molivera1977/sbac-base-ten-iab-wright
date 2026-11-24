@@ -146,10 +146,18 @@
   }
   const when = ms => `${new Date(ms).toLocaleDateString()} at ${new Date(ms).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`;
   const pctHTML = t => `<span class="cs-pct ${heatClass(t.pct)}">${t.pct}%</span>`;
-  // numbers only: a row's "on" comes from a student's computer (never shown as written)
-  const onText = r => {
+  /* Where a student is (Marcos 11/23: "on question 15 of 33" counted the Warm-Up's 18 lesson screens): "on question 7
+     of 15" — the questions only, like the boxes — or "in the lesson before question 7 of 15". A row's "on" is the screen
+     in the whole part (lessons too: the site saves it to pick up on any computer); a part whose screens are its own
+     (the Warm-Up: the same lesson places in every version) is counted through. Numbers only: a row's "on" comes from a
+     student's computer (never shown as written). */
+  const onText = (r, part) => {
     const q = Math.floor(Number(r.on && r.on.q)), of = Math.floor(Number(r.on && r.on.of));
-    return q > 0 && of > 0 ? `question ${q} of ${of}` : 'just started';
+    if (!(q > 0 && of > 0)) return 'just started';
+    const bank = window['FORM_' + part] || [], total = bank.filter(isScored).length;
+    if (!keepsOrder(part) || of !== bank.length || of === total || q > of) return `on question ${q} of ${of}`;
+    const before = bank.slice(0, q - 1).filter(isScored).length;   // the questions before this screen
+    return isScored(bank[q - 1]) ? `on question ${before + 1} of ${total}` : `in the lesson before question ${before + 1} of ${total}`;
   };
   const tryWord = () => (heatMode === 'first' ? '1st try' : 'latest try');
   // ⏱ a try's seconds on the site's own clock (it runs while the student is on that part) → words. Numbers only:
@@ -287,13 +295,13 @@
     return `<div class="cs-live-miss"><p class="lm-h">Missed so far:</p><ol class="lm-list">${ids.map(id => `<li><b class="lm-n">${spots.indexOf(id) + 1}.</b><span class="lm-lines">${byId[id].map(e => `<span class="lm-line">${says(e)}</span>`).join('')}</span></li>`).join('')}</ol></div>`;
   }
 
-  function cellHTML(c) {
+  function cellHTML(c, part) {
     if (!c) return '<span class="cs-none">—</span>';
     const n = c.tries.length;
     const done = !n ? ''
       : n === 1 ? `<b>${pctHTML(c.first)}</b><span>1 try${c.first.retake ? ' (retake)' : ''}</span>`
       : `<b>${pctHTML(c.first)} → ${pctHTML(c.latest)}</b><span>${n} tries · best ${c.best.pct}%</span>`;
-    const now = c.now ? `<span class="cs-now">▶ on ${onText(c.now)}</span>` : '';
+    const now = c.now ? `<span class="cs-now">▶ ${onText(c.now, part)}</span>` : '';
     return done + now;
   }
 
@@ -312,7 +320,7 @@
     const sum = `<p class="cs-sum"><b>${classList.length}</b> ${classList.length === 1 ? 'student' : 'students'} · <b>${finished}</b> finished ${finished === 1 ? 'try' : 'tries'} · <b>${working.length}</b> working now${last ? ` · last finished ${when(last)}` : ''}</p>`;
     const workingHTML = working.length ? `<h3 class="cs-h">Working now <span>saved after every answer · lowest share right first · updates by itself every 20 seconds</span></h3>
       <p class="cs-hint">🔎 Tap a numbered box to see that question: what the student picked and the right answer.</p>
-      <ul class="cs-working">${working.map(w => `<li><b>${esc(w.name)}</b> · ${FORM_NAMES[w.part]} · on ${onText(w.r)} · ${soFarHTML(w.r)} <span class="cs-ago">${ago(atOf(w.r))}</span>${liveStrip(w)}${liveMissed(w)}</li>`).join('')}</ul>` : '';
+      <ul class="cs-working">${working.map(w => `<li><b>${esc(w.name)}</b> · ${FORM_NAMES[w.part]} · ${onText(w.r, w.part)} · ${soFarHTML(w.r)} <span class="cs-ago">${ago(atOf(w.r))}</span>${liveStrip(w)}${liveMissed(w)}</li>`).join('')}</ul>` : '';
     const table = `<div class="cs-wrap"><table class="cs-table"><thead><tr><th scope="col">Student</th>${FORMS.map(f => `<th scope="col">${FORM_NAMES[f]}</th>`).join('')}</tr></thead>
       <tbody>${classList.map(st => `<tr><th scope="row">${esc(st.name)}</th>${FORMS.map(f => `<td>${cellHTML(st.parts[f])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
     return `${sum}${workingHTML}
@@ -528,6 +536,7 @@
     box.hidden = !classList.length;
   }
   function fixName() {
+    if (SHARE_MODE) return;   // a guest view writes nothing to her sheet
     const go = $('cs-fix-go');
     const msg = text => { $('cs-fix-msg').textContent = text; };
     const from = $('cs-fix-from').value;
@@ -639,10 +648,19 @@
       .finally(() => clearTimeout(timer));
   }
 
-  /* 📊 Class Scores: her PIN (given at Teacher Access in this tab, or asked now), then the sheet. A guest view (share.js)
-     has no Class Scores: names and scores stay with Mrs. Wright. */
+  /* 📊 Class Scores, the teacher's one screen: her PIN (given at Teacher Access in this tab, or asked now), then the
+     sheet. The teacher/admin guest (share.js) gets the same screen with invented students: nothing is read from her
+     sheet or sent to it (11/23, like the reading sites); a student guest gets no teacher screen. */
   app.openClassScores = function () {
-    if (SHARE_MODE) return;
+    if (SHARE_MODE) {
+      if (!window.SHARE_TEACHER) return;
+      stopActiveSpeech();
+      this.show('class-screen');
+      pickFor = null;
+      drawPick();
+      showSample();
+      return;
+    }
     const pin = givenTeacherPin();
     if (!pin) {
       this.showPinModal('📊 Class Scores', 'Enter the Teacher PIN.', p => { rememberTeacherPin(p); this.openClassScores(); });
@@ -673,17 +691,11 @@
     box.innerHTML = `<p class="cs-pick-h"><b>${pickFor === 'try' ? '👀 Try it as a student' : '✅ Answer key'}:</b> pick a part${count > 1 ? ' and a version' : ''}.</p>
       <div class="t-row" role="group" aria-label="Part">${TEACH_PARTS.map(f => btn(f === t.form, `${formOpen(f) ? '' : '🔒 '}${FORM_NAMES[f]}`, `data-cs-part="${f}"`)).join('')}</div>
       ${count > 1 ? `<div class="t-row" role="group" aria-label="Version">${Array.from({ length: count }, (_, i) => i + 1).map(v => btn(v === t.version, `Version ${v}`, `data-cs-ver="${v}"`)).join('')}</div>` : ''}
+      <p class="cs-pick-now" id="cs-picked">${label} · ${formOpen(t.form) ? 'open to students' : '🔒 closed to students'}</p>
       <button type="button" class="cs-pick-go" data-cs-go>${pickFor === 'try' ? `👀 Try it: ${label}` : `✅ Open the key: ${label}`}</button>`;
   }
   app.csPick = function (what) { pickFor = pickFor === what ? null : what; drawPick(); };
-  function keyBackTo(scores) {
-    const b = $('key-back-btn');
-    if (!b) return;
-    b.textContent = scores ? '← Class Scores' : '← Teacher screen';
-    b.onclick = scores ? () => app.openClassScores() : () => app.openTeacher();
-  }
-  const teacherKey0 = app.teacherKey;
-  app.teacherKey = function (fromScores) { teacherKey0.call(this); keyBackTo(fromScores === true); };
+
 
   document.addEventListener('click', e => {
     const screen = $('class-screen');
@@ -696,7 +708,7 @@
       const go = pickFor;
       pickFor = null;
       drawPick();
-      if (go === 'key') app.teacherKey(true); else app.teacherTry();
+      if (go === 'key') app.teacherKey(); else app.teacherTry();
       return;
     }
     const sq = e.target.closest('.cs-sq[data-live]');
@@ -718,8 +730,69 @@
     if (e.target.closest('#cs-fix-go')) fixName();
   });
 
-  // the guest view (share.js) has no Class Scores card
-  if (SHARE_MODE) { const card = $('t-class'); if (card) card.remove(); }
+  /* 👀 The teacher/admin guest's Class Scores (Marcos 11/23, like the reading sites' guest view): invented students
+     ("… Sample"), the same on every visit, from version 1's own questions — each miss picks the mistake the question itself
+     names (its slips), so the tap boxes and the heat map show real picks. Built here; never read from her sheet or sent
+     to it. No ✏️ Fix a name (it writes to her sheet). */
+  const SAMPLE_NAMES = ['Ava', 'Ben', 'Cara', 'Dev', 'Eli', 'Fay', 'Gus', 'Hana'].map(n => `${n} Sample`);
+  function sampleGames() {
+    const now = Date.now(), min = 60000, stamp = ms => new Date(ms).toISOString();
+    const pickOf = q => { const s = Object.keys(q.slips || {})[0]; return s != null ? s : qType(q) === 'mc' ? (q.choices || []).find(c => c !== q.answer) : null; };
+    const missable = part => spotsOf(part).filter(q => (qType(q) === 'mc' || qType(q) === 'entry') && pickOf(q) != null);
+    const miss = q => missEntry({ id: q.id, q: q.q, yourAnswer: pickOf(q), correct: q.answer });
+    const missesFor = (part, i, n) => { const m = missable(part); return Array.from({ length: n }, (_, k) => m[(i * 3 + k * 2) % m.length]).filter((q, k, a) => a.indexOf(q) === k); };
+    const row = (part, i, x) => Object.assign({ name: SAMPLE_NAMES[i], form: FORM_NAMES[part], total: spotsOf(part).length, tabSwitches: 0 }, x);
+    const done = (part, i, n, minsAgo, secs) => {
+      const qs = missesFor(part, i, n), tot = spotsOf(part).length, end = now - minsAgo * min;
+      return row(part, i, { sessionId: `S-${part}-${i}-${minsAgo}`, score: tot - qs.length, percent: Math.round((tot - qs.length) / tot * 100), done: true,
+        wrongQuestions: qs.map(miss).join(' | '), elapsed: secs, startedAt: stamp(end - secs * 1000), finishedAt: stamp(end), at: stamp(end), on: null, answers: null });
+    };
+    // working now: the first `answered` questions, `wrong` of them missed; "on" = the next screen, lessons counted, as the site saves it
+    const going = (part, i, answered, wrong, minsAgo) => {
+      const spots = spotsOf(part), bank = window['FORM_' + part] || [], asked = spots.slice(0, answered);
+      const missed = new Set(asked.filter(q => missable(part).includes(q)).slice(0, wrong).map(q => q.id));
+      return row(part, i, { sessionId: `S-${part}-${i}-now`, score: asked.filter(q => !missed.has(q.id)).length, percent: 0, done: false,
+        wrongQuestions: asked.filter(q => missed.has(q.id)).map(miss).join(' | '), elapsed: 0, startedAt: stamp(now - (minsAgo + 12) * min), finishedAt: '',
+        at: stamp(now - minsAgo * min), on: { q: (answered ? bank.indexOf(asked[answered - 1]) : -1) + 2, of: bank.length },
+        answers: asked.map(q => [q.id, missed.has(q.id) ? 0 : 1]) });
+    };
+    const games = {}, put = (part, r) => { (games[gameKey(part)] = games[gameKey(part)] || []).push(r); };
+    const wMiss = [5, 7, 3, 9, 4, 6, 2, 8], wMiss2 = [2, 3, null, 4, null, 2, null, null];
+    SAMPLE_NAMES.forEach((_, i) => {
+      put('W', done('W', i, wMiss[i], 60 * 24 * 3 + i * 7, 900 + i * 60));
+      if (wMiss2[i] != null) put('W', done('W', i, wMiss2[i], 60 * 24 * 2 + i * 5, 700 + i * 40));
+      if (i < 6) put('P', done('P', i, [3, 5, 1, 6, 2, 4][i], 60 * 24 + i * 9, 800 + i * 50));
+      if (i < 4) put('A', done('A', i, [2, 4, 1, 3][i], 90 + i * 11, 1100 + i * 70));
+    });
+    put('P', going('P', 6, 6, 2, 1));   // Gus: on question 7 of 15 in the Practice
+    put('W', going('W', 7, 6, 2, 2));   // Hana: in the lesson before question 7 of 15 in the Warm-Up
+    return games;
+  }
+  function showSample() {
+    clearTimeout(autoTimer);
+    ++loadToken;                       // nothing from her sheet can land here
+    $('cs-sample').hidden = false;
+    $('cs-fix').hidden = true;
+    $('cs-when').textContent = 'Sample data · nothing is read from or sent to her sheet';
+    const games = sampleGames(), rowsByPart = {};
+    Object.keys(games).forEach(k => { if (PART_OF[k]) rowsByPart[PART_OF[k]] = games[k]; });
+    classList = groupStudents(rowsByPart);
+    liveOpen = null;
+    $('cs-body').innerHTML = classHTML();
+    drawLive();
+    const hasFinished = p => classList.some(st => st.parts[p] && st.parts[p].tries.length);
+    if (!hasFinished(heatPart)) heatPart = FORMS.find(hasFinished) || heatPart;
+    showHeat(heatPart);
+  }
+  // the teacher/admin guest card says what the teacher's screen holds (share.js draws it)
+  if (SHARE_MODE) {
+    window.SHARE_CARDS = Object.assign({}, window.SHARE_CARDS, { teacher: [
+      ['📊', 'Class scores', 'Sample students: who is working now, each pick, the heat map.'],
+      ['👀', 'Try it as a student', 'Any part, start to score. ⏩ skips the waits.'],
+      ['✅', 'Answer key', 'Every question, the right answer and why. Printable.'],
+      ['🖥️', 'Slide Mode', 'The lesson, big, one step at a time, for the board. Never the scored questions.']
+    ] });
+  }
 
   window.ClassScores = { groupStudents, missedOf, parseMisses, questionOf };   // for site-tests
 })();

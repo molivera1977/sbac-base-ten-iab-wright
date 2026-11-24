@@ -1055,7 +1055,7 @@ const app = {
 
   /* ── screens ── */
   show(id) {
-    ['start-screen','readaloud-screen','directions-screen','quiz-screen','end-screen','scoreboard-screen','teacher-screen','key-screen','slide-screen','class-screen']
+    ['start-screen','readaloud-screen','directions-screen','quiz-screen','end-screen','scoreboard-screen','key-screen','slide-screen','class-screen']
       .forEach(s => document.getElementById(s).classList.add('hidden'));
     document.getElementById(id).classList.remove('hidden');
     document.body.classList.toggle('cs-page', id === 'class-screen');   // 📊 its own screen: no site title above it (11/23)
@@ -1224,10 +1224,11 @@ const app = {
     return { form, version };
   },
 
+  /* 🧑‍🏫 The teacher's one screen is 📊 Class Scores (Marcos 11/23, like the reading sites): Teacher Access, every way
+     back (the key, Slide Mode, a Try-it's bar, #teacher) and the teacher/admin guest card open it (class-scores.js). */
   openTeacher() {
     stopActiveSpeech();
-    this._renderTeacher(this._teacherPick());
-    this.show('teacher-screen');
+    this.openClassScores();
   },
 
   /* A part, a version: one row of buttons each; the picked one is filled in. A new part keeps the version when it has
@@ -1238,18 +1239,9 @@ const app = {
     this._renderTeacher(t);
   },
 
+  // the part and version picked (Class Scores' 👀 / ✅ box shows them): kept for this tab
   _renderTeacher(t) {
     try { sessionStorage.setItem(TEACHER_PICK_KEY, JSON.stringify(t)); } catch (e) {}
-    const btn = (on, label, change, id) =>
-      `<button type="button" class="t-pick${on ? ' on' : ''}" data-id="${id}" aria-pressed="${on}" onclick='app.teacherPick(${JSON.stringify(change)})'>${label}</button>`;
-    document.getElementById('t-parts').innerHTML = TEACH_PARTS
-      .map(f => btn(f === t.form, `${formOpen(f) ? '' : '🔒 '}${FORM_NAMES[f]}`, { form: f }, f)).join('');
-    const count = versionCount(t.form);
-    document.getElementById('t-version-row').classList.toggle('hidden', count < 2);
-    document.getElementById('t-versions').innerHTML = Array.from({ length: count }, (_, i) => i + 1)
-      .map(v => btn(v === t.version, `Version ${v}`, { version: v }, v)).join('');
-    document.getElementById('t-picked').textContent =
-      `${this._teachLabel(t.form, t.version)} · ${formOpen(t.form) ? 'open to students' : '🔒 closed to students'}`;
   },
 
   _teachLabel(form, version) {
@@ -3082,7 +3074,11 @@ document.addEventListener('keydown', e => {
 fillCounts();   // the start screen's and the directions' numbers, from the data
 app.init();
 if (TEACH) app._teachReady();
-else if (location.hash === '#teacher' && teacherUnlocked()) app.openTeacher();
+// #teacher (back from a Try-it): Class Scores, once class-scores.js (loaded after this file) is in (11/23)
+else if (location.hash === '#teacher' && teacherUnlocked()) {
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', () => app.openTeacher());
+  else app.openTeacher();
+}
 
 /* ── CLOSED-TO-STUDENTS LOCK ────────────────────────── */
 (function applyReviewLock() {

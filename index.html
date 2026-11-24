@@ -11,7 +11,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&family=Lexend:wght@500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=wr9pct-pg1" />
+  <link rel="stylesheet" href="style.css?v=wr9pct-one1" />
 </head>
 <body>
 <canvas id="confetti-canvas"></canvas>
@@ -402,34 +402,11 @@
     </div>
   </div>
 
-  <!-- ══════════════════════════════════════════
-       TEACHER SCREEN (the Lab's screen, 10/30): Teacher Access asks the PIN in the page, then one screen — a part, a
-       version, then 👀 Try it as a student, ✅ Answer key or 🖥️ Slide Mode. Any part; nothing has to be passed first.
-       Filled in by script.js.
-  ══════════════════════════════════════════ -->
-  <div id="teacher-screen" class="hidden">
-    <div class="t-bar">
-      <span class="t-title">🧑‍🏫 Teacher</span>
-      <span class="t-note">Nothing here is saved or sent.</span>
-      <button type="button" class="t-exit" id="t-exit-btn" onclick="app.exitTeacher()">✕ Exit teacher</button>
-    </div>
-    <!-- 📊 CLASS SCORES (Mrs. Wright's copy, like Mrs. Olivera's site): every student's work from her sheet -->
-    <button type="button" class="t-act t-class" id="t-class" onclick="app.openClassScores()">📊 Class Scores<span>Every student's work from every computer: scores, who is working now, a heat map of every question, the top 3 and the bottom 3.</span></button>
-    <h3 class="t-h">Part</h3>
-    <div class="t-row" id="t-parts"></div>
-    <div id="t-version-row">
-      <h3 class="t-h">Version <span class="t-h-note">each one has its own numbers</span></h3>
-      <div class="t-row" id="t-versions"></div>
-    </div>
-    <p class="t-picked" id="t-picked"></p>
-    <div class="t-actions">
-      <button type="button" class="t-act" id="t-try" onclick="app.teacherTry()">👀 Try it as a student<span>You answer, like a student, from the first question to the score. ⏩ Skip the wait opens anything that is shut. Nothing is saved.</span></button>
-      <button type="button" class="t-act" id="t-key" onclick="app.teacherKey()">✅ Answer key<span>Every scored question of this part and version on one page, the right answer marked, and why. You can print it.</span></button>
-      <button type="button" class="t-act" id="t-slides" data-guest-slides onclick="app.teacherSlides()">🖥️ Slide Mode<span>The lessons, big, for your desk or the board: the worked examples, one step at a time. Their numbers are on no question.</span></button>
-    </div>
-  </div>
-
-  <!-- 📊 CLASS SCORES (class-scores.js): read from Mrs. Wright's Corner with her PIN; nothing is written -->
+  <!-- 📊 CLASS SCORES (class-scores.js) = the teacher's one screen (Marcos 11/23: "push everything to the back and pull
+       the class scores forward", like the reading sites): Teacher Access opens it. Read from Mrs. Wright's Corner with
+       her PIN (only ✏️ Fix a name writes, on her OK). The teacher/admin guest sees it with invented students. The old
+       menu's 👀 Try it, ✅ Answer key, 🖥️ Slide Mode and ✕ Exit teacher are on its bar; a part and a version are
+       picked in the box under the bar. -->
   <div id="class-screen" class="hidden">
     <div class="t-bar">
       <span class="t-title">📊 Class Scores · Base Ten · Mrs. Wright</span>
@@ -438,9 +415,11 @@
         <button type="button" class="t-exit cs-refresh" onclick="app.openClassScores()">↻ Refresh</button>
         <button type="button" class="t-exit" id="cs-try" aria-expanded="false" aria-controls="cs-pick" onclick="app.csPick('try')">👀 Try it as a student</button>
         <button type="button" class="t-exit" id="cs-key" aria-expanded="false" aria-controls="cs-pick" onclick="app.csPick('key')">✅ Answer key</button>
-        <button type="button" class="t-exit" onclick="app.backToTeacher()">← Teacher screen</button>
+        <button type="button" class="t-exit" id="cs-slides" data-guest-slides onclick="app.teacherSlides()">🖥️ Slide Mode</button>
+        <button type="button" class="t-exit" id="t-exit-btn" onclick="app.exitTeacher()">✕ Exit teacher</button>
       </span>
     </div>
+    <p id="cs-sample" class="cs-sample" hidden>Sample data · invented students, not a real class · nothing here is saved or sent to Mrs. Wright</p>
     <!-- 👀 / ✅ from Class Scores (Marcos 11/23, like the reading sites): pick a part and a version, then go -->
     <div id="cs-pick" class="cs-pick" role="region" aria-label="Pick a part and a version" hidden></div>
     <div id="cs-body"></div>
@@ -484,7 +463,7 @@
     <div class="t-bar">
       <span class="t-title" id="key-title">✅ Answer key</span>
       <button type="button" class="t-exit" id="key-print-btn" onclick="document.body.classList.add('key-printing'); window.print(); document.body.classList.remove('key-printing');">🖨️ Print</button>
-      <button type="button" class="t-exit" id="key-back-btn" onclick="app.openTeacher()">← Teacher screen</button>
+      <button type="button" class="t-exit" id="key-back-btn" onclick="app.openTeacher()">← Class Scores</button>
     </div>
     <div id="key-body"></div>
   </div>
@@ -518,7 +497,7 @@
     <button type="button" id="teach-next" aria-label="Forward one" onclick="app.teachStep(1)">▶</button>
   </span>
   <button type="button" id="teach-skip" onclick="app.teacherSkipWait()">⏩ Skip the wait</button>
-  <button type="button" id="teach-back" onclick="app.backToTeacher()">← Teacher screen</button>
+  <button type="button" id="teach-back" onclick="app.backToTeacher()">← Class Scores</button>
 </div>
 
 <script src="share.js?v=tz2"></script>
@@ -546,7 +525,7 @@
      aloud instead), and the player. After kokoro-voice.js (video.js stops a video when the site speaks), before script.js. -->
 <script src="data/videos.js?v=1dcad845"></script>
 <script src="video.js?v=nbt1"></script>
-<script src="script.js?v=wr4-fair1-rn1-pg1"></script>
-<script src="class-scores.js?v=wr10ok-pg1"></script>
+<script src="script.js?v=wr4-fair1-rn1-one1"></script>
+<script src="class-scores.js?v=wr10ok-one1"></script>
 </body>
 </html>

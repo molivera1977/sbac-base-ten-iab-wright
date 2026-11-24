@@ -1240,6 +1240,9 @@ body.cs-page .container > h1, body.cs-page .container > .welcome-sub { display: 
            padding: 10px 14px; margin: -4px 0 14px; }
 .cs-pick[hidden] { display: none; }
 .cs-pick-h { margin: 0; color: #5c4600; }
+.cs-pick-now { margin: 0; font-weight: 700; color: #333; }
+.cs-sample { margin: -4px 0 14px; padding: 6px 12px; background: #fff8db; border: 2px dashed #e0b400; border-radius: 10px; color: #6b5200; font-weight: 700; font-size: 0.92rem; }
+.cs-sample[hidden] { display: none; }
 .cs-pick-go { font: inherit; font-weight: 700; padding: 8px 14px; border-radius: 9px; cursor: pointer; background: var(--primary);
               color: #fff; border: 2px solid var(--primary); }
 .cs-fix > summary { cursor: pointer; }
