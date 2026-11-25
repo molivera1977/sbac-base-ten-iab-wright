@@ -634,7 +634,7 @@
     const keep = sel.value;
     sel.innerHTML = `<option value="">Pick a name</option>${classList.map(st => `<option>${esc(st.name)}</option>`).join('')}`;
     if (classList.some(st => st.name === keep)) sel.value = keep;
-    box.hidden = !classList.length;
+    box.hidden = csWaiting || !classList.length;
   }
   function fixName() {
     if (SHARE_MODE) return;   // a guest view writes nothing to her sheet
@@ -718,6 +718,13 @@
         const rowsByPart = {};
         Object.keys(d.games || {}).forEach(k => { if (PART_OF[k]) rowsByPart[PART_OF[k]] = d.games[k] || []; });
         classList = groupStudents(rowsByPart);
+        csWaiting = !classList.length;
+        if (csWaiting) {
+          Object.entries(sampleGames()).forEach(([k, rows]) => { if (PART_OF[k]) rowsByPart[PART_OF[k]] = rows; });
+          classList = groupStudents(rowsByPart);
+        }
+        $('cs-sample').hidden = !csWaiting;
+        $('cs-sample').textContent = csWaiting ? WAIT_NOTE : SAMPLE_NOTE;
         fillFix();
         $('cs-when').textContent = `From Mrs. Wright's Corner (Google Sheets) · updated ${new Date().toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' })} · updates by itself every 20 seconds`;
         autoNext(pin);
@@ -847,6 +854,11 @@
      ("… Sample"), the same on every visit, from version 1's own questions — each miss picks the mistake the question itself
      names (its slips), so the tap boxes and the heat map show real picks. Built here; never read from her sheet or sent
      to it. No ✏️ Fix a name (it writes to her sheet). */
+  // her own class with no work yet (asked 11/25: "Until her 1st score"): the same sample class with its bar, until her
+  // students' first saved answer comes in on an update; then her real class, and the sample is gone
+  let csWaiting = false;
+  const SAMPLE_NOTE = ($('cs-sample') || {}).textContent || '';
+  const WAIT_NOTE = "Sample data · Your class has no scores yet, so these are made-up students to show you what this page will look like. They disappear as soon as your students' scores start showing up.";
   const SAMPLE_NAMES = ['Ava', 'Ben', 'Cara', 'Dev', 'Eli', 'Fay', 'Gus', 'Hana'].map(n => `${n} Sample`);
   function sampleGames() {
     const now = Date.now(), min = 60000, stamp = ms => new Date(ms).toISOString();
