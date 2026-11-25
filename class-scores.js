@@ -39,6 +39,10 @@
   let classList = [];
   let heatPart = 'W';
   let heatMode = 'latest';
+  // the rows' order (asked 11/25: "the scores on the right should be sortable"): 'name' A–Z, or by score. Tap Score:
+  // highest first, tap again: lowest first; tap Student: back to A–Z. Kept through the 20-second updates and the part tabs.
+  let heatSort = 'name';
+  const SORTS = { 'score-down': (a, b) => b.t.pct - a.t.pct, 'score-up': (a, b) => a.t.pct - b.t.pct };
   let loadToken = 0;
   let heatDone = [];    // the showing heat map's students: { name, t } (t = the try shown, with its misses)
   let heatStats = [];   // the showing heat map's per-question numbers
@@ -341,6 +345,7 @@
       const t = heatMode === 'first' ? st.parts[part].first : st.parts[part].latest;
       return { name: st.name, t };
     });
+    if (SORTS[heatSort]) done.sort(SORTS[heatSort]);   // a new list (classList stays A–Z); equal scores stay A–Z
     heatDone = done;
     if (!done.length) { heatStats = []; return `<p class="cs-msg">No one has finished ${FORM_NAMES[part]} yet.</p>`; }
     const stats = spots.map((q, i) => {
@@ -353,7 +358,11 @@
       const miss = d.t.missed.has(q.id);
       return `<td class="${miss ? 'h-miss' : 'h-ok'}"><button type="button" class="h-cell" data-s="${si}" data-q="${i}" aria-expanded="false" title="${esc(d.name)} · question ${i + 1}: ${miss ? 'missed' : 'right'}">${miss ? '✗' : '✓'}</button></td>`;
     }).join('')}<td class="h-score">${pctHTML(d.t)}</td><td class="h-time">${timeText(d.t.elapsed)}</td><td class="h-left">${leftText(d.t.tabSwitches)}</td></tr>`).join('');
-    const foot = `<tr><th scope="row">% right</th>${stats.map(s => `<td class="${heatClass(s.pct)}">${s.pct}</td>`).join('')}<td></td><td></td><td></td></tr>`;
+    // the bottom row's % opens the same box as the question number at the top (asked 11/25)
+    const foot = `<tr><th scope="row">% right</th>${stats.map(s => `<td class="${heatClass(s.pct)}"><button type="button" class="h-pbtn" data-q="${s.i}" aria-expanded="false" aria-label="Question ${s.i + 1}: ${s.pct}% right. Show what everyone picked." title="Question ${s.i + 1} · ${s.right} of ${done.length} right · tap to see what everyone picked">${s.pct}</button></td>`).join('')}<td></td><td></td><td></td></tr>`;
+    // Student and Score are buttons that set the rows' order; aria-sort says which order is on
+    const sortHead = (key, label, on) => `<th scope="col" class="h-sorth"${on ? ` aria-sort="${on}"` : ''}><button type="button" class="h-sort${on ? ' on' : ''}" data-sort="${key}" title="${key === 'name' ? 'Sort by name, A to Z' : 'Sort by score (tap again to flip)'}">${label}<span class="h-arrow" aria-hidden="true">${on === 'descending' ? ' ▼' : on === 'ascending' ? ' ▲' : key === 'name' ? '' : ' ↕'}</span></button></th>`;
+    const scoreOn = heatSort === 'score-down' ? 'descending' : heatSort === 'score-up' ? 'ascending' : null;
     // most right first for the top 3, fewest right first for the bottom 3; a tie goes to the earlier question
     const top = stats.slice().sort((a, b) => b.right - a.right || a.i - b.i).slice(0, 3);
     const bottom = stats.slice().sort((a, b) => a.right - b.right || a.i - b.i).slice(0, 3);
@@ -363,8 +372,8 @@
       <button type="button" class="cs-rank-picks h-qbtn" data-q="${s.i}" aria-expanded="false">🔎 What students picked</button></li>`).join('')}</ol>`;
     const versions = versionsOf(part).length > 1;
     return `<p class="cs-legend">${FORM_NAMES[part]} · each student's <b>${heatMode === 'first' ? '1st try' : 'latest try'}</b> · <span class="h-ok">✓</span> right · <span class="h-miss">✗</span> missed · bottom row = % of the ${done.length} ${done.length === 1 ? 'student' : 'students'} who got it right</p>
-      <p class="cs-hint">🔎 Tap a ✓ or ✗ to see what that student picked. Tap a question number to see what everyone picked.</p>
-      <div class="cs-wrap"><table class="cs-heat"><thead><tr><th scope="col">Student</th>${heads}<th scope="col">Score</th><th scope="col">Time</th><th scope="col">Left the page</th></tr></thead>
+      <p class="cs-hint">🔎 Tap a ✓ or ✗ to see what that student picked. Tap a question number or its % to see what everyone picked. Tap Score to sort by score (again to flip; tap Student for A–Z).</p>
+      <div class="cs-wrap"><table class="cs-heat"><thead><tr>${sortHead('name', 'Student', heatSort === 'name' ? 'ascending' : null)}${heads}${sortHead('score', 'Score', scoreOn)}<th scope="col">Time</th><th scope="col">Left the page</th></tr></thead>
       <tbody>${body}</tbody><tfoot>${foot}</tfoot></table></div>
       <p class="cs-note">⏱ Time = minutes on the site's clock for that try. Left the page = how many times the student switched to another tab or window during it.</p>
       <div id="cs-qbox" class="cs-qbox" hidden></div>
@@ -406,20 +415,97 @@
       const right = c.ids.filter(id => !d.t.missed.has(id)).length;
       return { right, of: c.ids.length, pct: Math.round(right / c.ids.length * 100) };
     };
-    const body = done.map(d => `<tr><th scope="row">${esc(d.name)}</th>${cols.map(c => {
+    stdCols = cols;
+    // every box, every standard and every % is a button: it opens the box under this map (asked 11/25)
+    const body = done.map((d, si) => `<tr><th scope="row">${esc(d.name)}</th>${cols.map((c, ci) => {
       const s = score(d, c);
-      return `<td class="${heatClass(s.pct)}" title="${s.right} of ${s.of} right">${s.right}/${s.of}</td>`;
+      const what = `${esc(d.name)} · ${esc(c.std)}: ${s.right} of ${s.of} right`;
+      return `<td class="${heatClass(s.pct)}"><button type="button" class="sk-cell" data-c="${ci}" data-s="${si}" aria-expanded="false" aria-controls="cs-stdbox" aria-label="${what}. Show the answers." title="${what} · tap to see the answers">${s.right}/${s.of}</button></td>`;
     }).join('')}</tr>`).join('');
-    const foot = cols.map(c => {
+    const foot = cols.map((c, ci) => {
       const pct = Math.round(done.reduce((n, d) => n + score(d, c).right, 0) / (done.length * c.ids.length) * 100);
-      return `<td class="${heatClass(pct)}">${pct}</td>`;
+      return `<td class="${heatClass(pct)}"><button type="button" class="sk-pbtn" data-c="${ci}" aria-expanded="false" aria-controls="cs-stdbox" aria-label="${esc(c.std)}: ${pct}% right. Show its questions." title="${esc(c.std)} · tap to see its questions">${pct}</button></td>`;
     }).join('');
     return `<h3 class="cs-h cs-std-h">📐 Standards heat map <span>${FORM_NAMES[part]} · each student's ${tryWord()} · right out of that standard's questions</span></h3>
-      <div class="cs-wrap"><table class="cs-stdmap"><thead><tr><th scope="col">Student</th>${cols.map(c => `<th scope="col" title="${esc(c.words)}">${esc(c.std)}<span class="cs-std-name">${esc(c.name)}</span><span class="cs-std-q">Q${c.ns.join(', ')}</span></th>`).join('')}</tr></thead>
+      <p class="cs-hint">🔎 Tap a box to see that student's answers in that standard. Tap a standard or its % to see its questions.</p>
+      <div class="cs-wrap"><table class="cs-stdmap"><thead><tr><th scope="col">Student</th>${cols.map((c, ci) => `<th scope="col" title="${esc(c.words)}"><button type="button" class="sk-head" data-c="${ci}" aria-expanded="false" aria-controls="cs-stdbox">${esc(c.std)}<span class="cs-std-name">${esc(c.name)}</span><span class="cs-std-q">Q${c.ns.join(', ')}</span></button></th>`).join('')}</tr></thead>
       <tbody>${body}</tbody><tfoot><tr><th scope="row">% right</th>${foot}</tr></tfoot></table></div>
+      <div id="cs-stdbox" class="cs-qbox cs-stdbox" role="region" aria-live="polite" hidden></div>
       <ul class="cs-std-list">${cols.map(c => `<li><b>${esc(c.std)} · ${esc(c.name)}</b> <span class="cs-std-qs">(questions ${c.ns.join(', ')})</span>
         <span class="cs-std-words">${esc(c.words)}</span>
         <span class="cs-std-skills">Skills: ${c.skills.map(esc).join(' · ')}</span></li>`).join('')}</ul>`;
+  }
+
+  /* The standards map's box (asked 11/25: "wouldn't it be helpful that all these be clickable?"). A student's box → that
+     student's answer on each question of that standard (the question, the right answer, what they picked). A standard or
+     its % → its questions, each with its % right and its most-picked wrong answer; a question's number opens its box under
+     the heat map (what everyone picked). One box at a time; tap the same thing again to close it. Kept through the
+     20-second updates and the sort. */
+  let stdCols = [];     // the map's columns as drawn: { std, name, words, skills, ns: question numbers, ids }
+  let stdOpen = null;   // the open box: { c: column, who: a student's name, or '' for the whole standard }
+  const stdScore = (d, c) => { const right = c.ids.filter(id => !d.t.missed.has(id)).length; return { right, of: c.ids.length, pct: Math.round(right / c.ids.length * 100) }; };
+  const stdGroup = c => { const right = heatDone.reduce((n, d) => n + stdScore(d, c).right, 0), of = heatDone.length * c.ids.length; return { right, of, pct: Math.round(right / of * 100) }; };
+  // the question as the box under the heat map shows it: its words, its picture, the right answer
+  function stdAskHTML(q) {
+    const many = versionsOf(heatPart).length > 1;
+    const pic = q.pic && window.M2V ? `<div class="key-pic cs-qbox-pic">${M2V.picHTML(q.pic)}</div>` : '';
+    return `<div class="cs-qbox-ask"><p class="cs-qbox-label">${many ? 'Version 1 of this question' : 'The question'}</p>
+      <p class="key-ask">${formatMathText(q.q)}</p>${pic}${app._keyAnswerHTML(q)}</div>`;
+  }
+  function stdBoxHTML(c, d) {
+    const col = stdCols[c];
+    const title = `<span class="cs-qbox-skill">${esc(col.std)}${col.name ? ` · ${esc(col.name)}` : ''}</span>`;
+    const x = '<button type="button" class="cs-qbox-x" data-stdclose aria-label="Close">✕</button>';
+    if (d) {
+      const s = stdScore(d, col);
+      return `<div class="cs-qbox-head"><b>${esc(d.name)}</b>${title}<span class="cs-pill ${heatClass(s.pct)}">${s.right} of ${s.of} right · ${s.pct}%</span>${x}</div>
+        ${col.ns.filter(n => heatStats[n - 1]).map(n => {
+          const q = heatStats[n - 1].q;
+          return `<div class="cs-std-q1"><h5>Question ${n}</h5>${studentHTML(heatPart, q, d)}${stdAskHTML(q)}</div>`;
+        }).join('')}`;
+    }
+    const g = stdGroup(col);
+    const line = n => {
+      const s = heatStats[n - 1];
+      if (!s) return '';
+      const { list, most } = wrongPicks(heatPart, s.q);
+      const tops = most >= 2 ? list.filter(w => w.names.length === most) : [];
+      return `<li class="sk-line"><button type="button" class="cs-std-openq" data-q="${n - 1}" aria-controls="cs-qbox" title="Question ${n}: tap to see what everyone picked">${n}</button>
+        <div class="sk-line-body"><span class="cs-pill ${heatClass(s.pct)}">${s.right} of ${heatDone.length} right · ${s.pct}%</span>
+        <span class="sk-sum"><i>${esc(skillOf(s.q.id) || '')}:</i> ${formatMathText(s.q.q)}</span>
+        <span class="sk-top">${tops.length ? `<b>Most-picked wrong answer:</b> ${tops.map(w => `${w.e.row ? `Row ${w.e.row}: ` : ''}${formatMathText(w.e.picked)}`).join(' <i>or</i> ')} <span class="sk-n">(${most} students${tops.length > 1 ? ' each' : ''})</span>` : 'No wrong answer was picked by 2 or more students.'}</span></div></li>`;
+    };
+    return `<div class="cs-qbox-head"><b>Standard</b>${title}<span class="cs-pill ${heatClass(g.pct)}">${g.right} of ${g.of} answers right · ${g.pct}%</span>${x}</div>
+      <p class="cs-note sk-hint">Tap a question's number to see what everyone picked.</p>
+      <ul class="sk-lines">${col.ns.map(line).join('')}</ul>`;
+  }
+  // draw the box for stdOpen (or close it), and mark what is open
+  function drawStd() {
+    const box = $('cs-stdbox');
+    if (!box) return;
+    const d = stdOpen && stdOpen.who ? heatDone.find(x => x.name === stdOpen.who) : null;
+    if (stdOpen && (!stdCols[stdOpen.c] || (stdOpen.who && !d))) stdOpen = null;   // that column or student is not on the map now
+    document.querySelectorAll('#cs-heat .sk-cell, #cs-heat .sk-head, #cs-heat .sk-pbtn').forEach(b => {
+      const cell = b.classList.contains('sk-cell');
+      const on = Boolean(stdOpen) && Number(b.dataset.c) === stdOpen.c && (cell ? Boolean(d) && heatDone[Number(b.dataset.s)] === d : !stdOpen.who);
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-expanded', String(on));
+    });
+    box.innerHTML = stdOpen ? stdBoxHTML(stdOpen.c, d) : '';
+    box.hidden = !stdOpen;
+  }
+  // a box (si = a student's row) or a standard / % (si = null): open it, or close it when that one is open
+  function toggleStd(c, si) {
+    const who = si == null ? '' : heatDone[si].name;
+    stdOpen = stdOpen && stdOpen.c === c && stdOpen.who === who ? null : { c, who };
+    drawStd();
+  }
+  // a question's number in the standards box: open that question's box under the heat map (never close it) and go there
+  function openQ(i) {
+    const box = $('cs-qbox');
+    if (!box || !heatStats[i]) return;
+    if (box.hidden || box.dataset.q !== String(i) || box.dataset.s) toggleQ(i, null);
+    box.scrollIntoView({ block: 'start', behavior: 'smooth' });
   }
 
   /* ── 🔎 WHAT EACH STUDENT PICKED ── */
@@ -445,7 +531,7 @@
     return `<div class="cs-student no"><p><b>${esc(d.name)}</b> ✗ missed it <span>(${tryWord()})</span></p>${mine.map(e => missHTML(part, e, first)).join('')}</div>`;
   }
   // Everyone: who got it right, each wrong answer (how many, who), who missed it with no answer saved
-  function picksHTML(part, q) {
+  function wrongPicks(part, q) {
     const many = versionsOf(part).length > 1;
     const right = [], blank = [], groups = {};
     heatDone.forEach(d => {
@@ -463,6 +549,10 @@
     });
     const list = Object.values(groups).sort((a, b) => b.names.length - a.names.length || a.e.row - b.e.row);
     const most = list.length ? list[0].names.length : 0;
+    return { many, right, blank, list, most };
+  }
+  function picksHTML(part, q) {
+    const { many, right, blank, list, most } = wrongPicks(part, q);
     const isTop = g => most >= 2 && g.names.length === most;
     const tied = list.filter(isTop).length > 1;
     const n = heatDone.length;
@@ -498,7 +588,7 @@
     const who = si == null ? '' : String(si);
     const same = !box.hidden && box.dataset.q === String(i) && (box.dataset.s || '') === who;
     if (same) { closeQ(); return; }
-    document.querySelectorAll('#cs-heat .h-qbtn, #cs-heat .h-cell').forEach(b => {
+    document.querySelectorAll('#cs-heat .h-qbtn, #cs-heat .h-pbtn, #cs-heat .h-cell').forEach(b => {   // the number and its % open the same box
       const on = b.dataset.q === String(i) && (b.classList.contains('h-cell') ? b.dataset.s === who : !who);
       b.classList.toggle('on', on);
       b.setAttribute('aria-expanded', String(on));
@@ -514,14 +604,25 @@
     box.hidden = true;
     box.dataset.q = '';
     box.dataset.s = '';
-    document.querySelectorAll('#cs-heat .h-qbtn, #cs-heat .h-cell').forEach(b => { b.classList.remove('on'); b.setAttribute('aria-expanded', 'false'); });
+    document.querySelectorAll('#cs-heat .h-qbtn, #cs-heat .h-pbtn, #cs-heat .h-cell').forEach(b => { b.classList.remove('on'); b.setAttribute('aria-expanded', 'false'); });
   }
 
-  function showHeat(part) {
+  // keepBox: the box to open again after drawing (undefined = the one open now, when the part stays the same)
+  function showHeat(part, keepBox) {
+    const keep = keepBox !== undefined ? keepBox : (part === heatPart ? openBox() : null);
+    if (part !== heatPart) stdOpen = null;   // another part: other questions
     heatPart = part;
     document.querySelectorAll('#class-screen [data-heat]').forEach(b => { const on = b.dataset.heat === part; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
     document.querySelectorAll('#class-screen [data-mode]').forEach(b => { const on = b.dataset.mode === heatMode; b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
     $('cs-heat').innerHTML = heatHTML(part);
+    drawStd();
+    reopenQ(keep);
+  }
+  function reopenQ(keep) {   // a question's box again; a student's box only while that student is still on the map
+    if (!keep || !heatStats[keep.q]) return;
+    if (keep.name == null) { toggleQ(keep.q, null); return; }
+    const row = heatDone.findIndex(x => x.name === keep.name);
+    if (row >= 0) toggleQ(keep.q, row);
   }
 
   /* ── ✏️ FIX A NAME ── the class's names in a list; the right first and last name (the sign-in's rules: tidied, letters
@@ -624,11 +725,11 @@
           body.innerHTML = '<p class="cs-msg">No work yet. Scores show up here as soon as students start answering.</p>';
           return;
         }
-        if (!quiet) liveOpen = null;   // ↻ Refresh or a new visit starts closed; the 20-second update keeps the open box
+        if (!quiet) { liveOpen = null; stdOpen = null; }   // ↻ Refresh or a new visit starts closed; the 20-second update keeps the open boxes
         body.innerHTML = classHTML();
         drawLive();
         const hasFinished = p => classList.some(st => st.parts[p] && st.parts[p].tries.length);
-        if (!hasFinished(heatPart)) heatPart = FORMS.find(hasFinished) || heatPart;
+        if (!hasFinished(heatPart)) { heatPart = FORMS.find(hasFinished) || heatPart; stdOpen = null; }
         showHeat(heatPart);
         if (keep && heatStats[keep.q]) {
           const si = keep.name == null ? null : heatDone.findIndex(x => x.name === keep.name);
@@ -718,9 +819,21 @@
     if (h) { showHeat(h.dataset.heat); return; }
     const m = e.target.closest('[data-mode]');
     if (m) { heatMode = m.dataset.mode; showHeat(heatPart); return; }
+    const so = e.target.closest('#cs-heat [data-sort]');
+    if (so) {   // Score: highest first, then lowest first, then highest again; Student: A–Z. The open boxes stay open.
+      heatSort = so.dataset.sort === 'name' ? 'name' : heatSort === 'score-down' ? 'score-up' : 'score-down';
+      showHeat(heatPart);
+      return;
+    }
+    // the standards map (11/25): a box, a standard or its % opens its box; a question's number in it opens that question
+    if (e.target.closest('[data-stdclose]')) { stdOpen = null; drawStd(); return; }
+    const sk = e.target.closest('.sk-cell, .sk-head, .sk-pbtn');
+    if (sk) { toggleStd(Number(sk.dataset.c), sk.classList.contains('sk-cell') ? Number(sk.dataset.s) : null); return; }
+    const oq = e.target.closest('.cs-std-openq');
+    if (oq) { openQ(Number(oq.dataset.q)); return; }
     const cell = e.target.closest('.h-cell');
     if (cell) { toggleQ(Number(cell.dataset.q), Number(cell.dataset.s)); return; }
-    const qb = e.target.closest('.h-qbtn');
+    const qb = e.target.closest('.h-qbtn, .h-pbtn');
     if (qb) {
       toggleQ(Number(qb.dataset.q), null);
       if (qb.classList.contains('cs-rank-picks') && !$('cs-qbox').hidden) $('cs-qbox').scrollIntoView({ block: 'nearest' });

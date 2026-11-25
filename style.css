@@ -1397,3 +1397,33 @@ body.cs-page .container > h1, body.cs-page .container > .welcome-sub { display: 
 .cs-std-words { display: block; margin-top: 2px; color: #333; }
 .cs-std-skills { display: block; margin-top: 3px; color: #555; font-style: italic; }
 .cs-qbox-pic { margin: 6px 0; }
+
+/* the heat map's bottom-row % is a button too: it opens the same box as the question number (11/25) */
+.cs-heat tfoot td:has(> .h-pbtn) { padding: 0; }
+.h-pbtn { font: inherit; font-weight: 800; color: inherit; background: none; border: 0; width: 100%; min-height: 30px; padding: 5px 1px; cursor: pointer; }
+.h-pbtn:hover { background: rgba(0, 0, 0, 0.06); }
+.h-pbtn:focus-visible { outline: 3px solid var(--primary); outline-offset: -3px; }
+.h-pbtn.on { outline: 3px solid var(--primary-dark); outline-offset: -3px; background: rgba(0, 0, 0, 0.08); }
+/* Student and Score sort the rows (11/25) */
+.h-sort { font: inherit; font-weight: 800; color: inherit; background: none; border: 0; border-radius: 6px; padding: 2px 4px; cursor: pointer; white-space: nowrap; }
+.h-sort:hover, .h-sort:focus-visible { outline: 2px solid var(--primary); }
+.h-sort.on { color: var(--primary-dark); }
+/* every box, standard and % on the standards map is a button: it opens the box under the map (11/25) */
+.cs-stdmap td:has(> .sk-cell), .cs-stdmap td:has(> .sk-pbtn), .cs-stdmap thead th:has(> .sk-head) { padding: 0; }
+.sk-cell, .sk-pbtn, .sk-head { font: inherit; color: inherit; background: none; border: 0; width: 100%; min-height: 30px; padding: 6px 4px; cursor: pointer; }
+.sk-pbtn { font-weight: 800; }
+.sk-head { font-weight: 700; color: var(--primary-dark); }
+.sk-cell:hover, .sk-pbtn:hover, .sk-head:hover { background: rgba(0, 0, 0, 0.06); }
+.sk-cell:focus-visible, .sk-pbtn:focus-visible, .sk-head:focus-visible { outline: 3px solid var(--primary); outline-offset: -3px; }
+.sk-cell.on, .sk-pbtn.on, .sk-head.on { outline: 3px solid var(--primary-dark); outline-offset: -3px; background: rgba(0, 0, 0, 0.08); }
+.cs-stdbox .cs-std-q1 { border-top: 1px solid #eee; padding-top: 8px; margin-top: 8px; }
+.cs-stdbox .cs-std-q1 h5 { margin: 0 0 4px; font-size: 0.95rem; color: var(--primary-dark); }
+.sk-hint { margin: 0 0 6px; }
+#cs-qbox { scroll-margin-top: 12px; }   /* a question opened from the standards box lands with its heading in view */
+.sk-lines { list-style: none; margin: 6px 0 0; padding: 0; display: grid; gap: 8px; }
+.sk-line { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border: 1px solid #e5e5e5; border-radius: 10px; background: #fafafa; }
+.sk-line-body { display: flex; flex-direction: column; align-items: flex-start; gap: 4px; min-width: 0; }
+.sk-sum { font-family: Andika, system-ui, sans-serif; }
+.sk-top { font-size: 0.88rem; }
+.cs-std-openq { font: inherit; font-weight: 800; min-width: 34px; min-height: 30px; border: 2px solid var(--primary); border-radius: 8px; background: #fff; color: var(--primary-dark); cursor: pointer; }
+.cs-std-openq:hover, .cs-std-openq:focus-visible { background: #f4f0ff; }
