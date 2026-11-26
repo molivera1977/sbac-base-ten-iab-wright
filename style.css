@@ -1287,8 +1287,8 @@ body.cs-page .container > h1, body.cs-page .container > .welcome-sub { display: 
 .cs-table th, .cs-table td { border-bottom: 1px solid #eee; padding: 8px 10px; text-align: left; vertical-align: top; }
 .cs-table thead th { background: #f4f0ff; color: var(--primary-dark); white-space: nowrap; }
 .cs-table tbody th { white-space: nowrap; font-weight: 600; }
-.cs-table td b { display: block; font-weight: 700; white-space: nowrap; }
-.cs-table td span { display: block; font-size: 0.8rem; color: #666; }
+.cs-table :where(tr:not(.cs-sc-row)) td b { display: block; font-weight: 700; white-space: nowrap; }
+.cs-table :where(tr:not(.cs-sc-row)) td span { display: block; font-size: 0.8rem; color: #666; }
 .cs-table td .cs-pct { display: inline; font-size: 0.92rem; }
 .cs-none { color: #bbb; }
 .cs-now { color: #1565c0 !important; font-weight: 700; }
@@ -1427,3 +1427,14 @@ body.cs-page .container > h1, body.cs-page .container > .welcome-sub { display: 
 .sk-top { font-size: 0.88rem; }
 .cs-std-openq { font: inherit; font-weight: 800; min-width: 34px; min-height: 30px; border: 2px solid var(--primary); border-radius: 8px; background: #fff; color: var(--primary-dark); cursor: pointer; }
 .cs-std-openq:hover, .cs-std-openq:focus-visible { background: #f4f0ff; }
+/* 11/25 a student's score and a Top 3 / Bottom 3 question are buttons (Marcos: "in the spirit of everything being clickable") */
+.cs-cell, .cs-rank-btn { display: block; width: 100%; padding: 4px 6px; border: 2px solid transparent; border-radius: 10px; background: none; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.cs-cell:hover, .cs-cell:focus-visible, .cs-rank-btn:hover, .cs-rank-btn:focus-visible { background: #f4f0ff; }
+.cs-cell.on, .cs-rank-btn.on { border-color: var(--primary); background: #f4f0ff; }
+.cs-rank-btn .cs-q { display: block; }
+.cs-rank-more { display: inline-block; margin-top: 6px; padding: 4px 10px; border-radius: 8px; border: 2px solid var(--primary); color: var(--primary); font-size: 0.84rem; font-weight: 700; }
+.cs-rank-btn.on .cs-rank-more { background: var(--primary); color: #fff; }
+.cs-table .cs-sc-row > td { padding: 2px 10px 14px; }
+.sc-take { margin-top: 10px; }
+.sc-line { margin: 0 0 4px; }
+.sc-q { margin-top: 8px; }

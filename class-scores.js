@@ -309,6 +309,95 @@
     return done + now;
   }
 
+  /* 🔎 A STUDENT'S SCORE (Marcos 11/25: "in the spirit of everything being clickable… their individual scores"): a score
+     is a button; it opens a box right under that student's row: each try of that part, 1st try first (its %, right out
+     of how many, when, how long) with a ✓ / ✗ box per question (tap one: what the student picked, the named mistake,
+     the right answer, the question), and a try being worked on now with its boxes so far. One box at a time; tap the
+     score again (or ✕) to close it. The 20-second update keeps it open (found by the student's name and the part). */
+  let scOpen = null;   // { key: keyOf(name), part, take: a try's index or null, q: a question or null }
+  function scCellHTML(st, part, inner) {
+    if (!st.parts[part]) return `<td>${inner}</td>`;
+    return `<td><button type="button" class="cs-cell" data-sc="${esc(keyOf(st.name))}" data-scset="${part}" aria-expanded="false" title="${esc(st.name)} · ${esc(FORM_NAMES[part])}: tap to see each try">${inner}</button></td>`;
+  }
+  const scTries = c => c.tries.concat(c.now ? [c.now] : []);   // groupStudents keeps the tries in finish order
+  // ✓ / ✗ / not yet for one question of one try: a finished try's misses; a try going on now: what it saved so far
+  function scMark(part, r, q, now) {
+    if (!now) return r.missed.has(q.id) ? 'miss' : 'ok';
+    const x = liveAnswers(r, part)[q.id];
+    return x == null ? 'wait' : x ? 'ok' : 'miss';
+  }
+  const scTryName = k => (k === 0 ? '1st try' : `Try ${k + 1}`);
+  function scBoxHTML(st, part) {
+    const c = st.parts[part];
+    const tries = scTries(c).map((r, k) => {
+      const now = r === c.now;
+      const line = now
+        ? `<b>▶ Working on it now</b> · ${onText(r, part)} · ${soFarHTML(r)}`
+        : `<b>${scTryName(k)}</b>${r.retake ? ' (retake)' : ''} · ${pctHTML(r)} · ${Number(r.score) || 0} of ${Number(r.total) || spotsOf(part).length} right · ${when(finishOf(r))} · ${timeText(r.elapsed)}`;
+      const strip = spotsOf(part).map((q, i) => {
+        const m = scMark(part, r, q, now);
+        return `<button type="button" class="cs-sq sc-qb sq-${m}" data-sctake="${k}" data-q="${i}" aria-expanded="false" title="Question ${i + 1}: ${m === 'ok' ? 'right' : m === 'miss' ? 'wrong' : 'not answered yet'}"><i>${i + 1}</i>${m === 'ok' ? '✓' : m === 'miss' ? '✗' : ''}</button>`;
+      }).join('');
+      return `<div class="sc-take${now ? ' sc-now' : ''}"><p class="sc-line">${line}</p>
+        <span class="cs-strip" role="group" aria-label="${esc(st.name)}: each question. Tap one to see it.">${strip}</span>
+        <div class="cs-qbox sc-q" data-sc-q="${k}" hidden></div></div>`;
+    }).join('');
+    return `<div class="cs-qbox-head"><b>${esc(st.name)}</b><span class="cs-qbox-skill">${esc(FORM_NAMES[part])}</span>
+        <button type="button" class="cs-qbox-x" data-scclose aria-label="Close ${esc(st.name)}'s ${esc(FORM_NAMES[part])}">✕</button></div>${tries}`;
+  }
+  // the box for question i of one try: the heat map's answer box (the pick, the named mistake, the right answer) and the
+  // question as the Working-now box shows it; a try going on now: the Working-now box itself
+  function scQHTML(st, part, r, k, i, now) {
+    const live = liveBoxHTML({ name: st.name, part, r }, i);
+    if (now) return live.replace('data-live-close', 'data-scqclose');
+    const q = spotsOf(part)[i];
+    const asked = live.slice(live.indexOf('<div class="cs-qbox-ask">'));
+    return `<div class="cs-qbox-head"><b>Question ${i + 1}</b><span class="cs-qbox-skill">${esc(skillOf(q.id) || '')}</span>
+        <button type="button" class="cs-qbox-x" data-scqclose aria-label="Close question ${i + 1}">✕</button></div>
+      ${studentHTML(part, q, { name: st.name, t: r }).split(`<span>(${tryWord()})</span>`).join(`<span>(${scTryName(k).toLowerCase()})</span>`)}${asked}`;
+  }
+  function drawSc() {
+    const st = scOpen ? classList.find(x => keyOf(x.name) === scOpen.key) : null;
+    const c = st ? st.parts[scOpen.part] : null;
+    if (!c) scOpen = null;
+    const tries = scOpen ? scTries(c) : [];
+    if (scOpen && scOpen.take != null && !(tries[scOpen.take] && spotsOf(scOpen.part)[scOpen.q])) scOpen = { ...scOpen, take: null, q: null };
+    // the box is a row of its own right under the student's row, there only while it is open (the table keeps one row per student)
+    document.querySelectorAll('#cs-body .cs-sc-row').forEach(row => row.remove());
+    const under = scOpen ? [...document.querySelectorAll('#cs-body .cs-cell')].find(b => b.dataset.sc === scOpen.key) : null;
+    const tr = under ? under.closest('tr') : null;
+    if (tr) {
+      const row = document.createElement('tr');
+      row.className = 'cs-sc-row';
+      row.dataset.scRow = scOpen.key;
+      row.innerHTML = `<td colspan="${tr.children.length}"><div class="cs-qbox cs-scbox" role="region" aria-live="polite">${scBoxHTML(st, scOpen.part)}</div></td>`;
+      tr.after(row);
+    }
+    document.querySelectorAll('#cs-body .cs-cell').forEach(b => {
+      const on = Boolean(scOpen) && b.dataset.sc === scOpen.key && b.dataset.scset === scOpen.part;
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-expanded', String(on));
+    });
+    if (!scOpen || scOpen.take == null) return;
+    const box = document.querySelector(`#cs-body .sc-q[data-sc-q="${scOpen.take}"]`);
+    if (box) { box.innerHTML = scQHTML(st, scOpen.part, tries[scOpen.take], scOpen.take, scOpen.q, tries[scOpen.take] === c.now); box.hidden = false; }
+    document.querySelectorAll('#cs-body .sc-qb').forEach(b => {
+      const on = b.dataset.sctake === String(scOpen.take) && b.dataset.q === String(scOpen.q);
+      b.classList.toggle('on', on);
+      b.setAttribute('aria-expanded', String(on));
+    });
+  }
+  function toggleSc(key, part) {
+    scOpen = scOpen && scOpen.key === key && scOpen.part === part ? null : { key, part, take: null, q: null };
+    drawSc();
+  }
+  function toggleScQ(take, q) {
+    if (!scOpen) return;
+    const same = scOpen.take === take && scOpen.q === q;
+    scOpen = { ...scOpen, take: same ? null : take, q: same ? null : q };
+    drawSc();
+  }
+
   function classHTML() {
     const working = [];
     let finished = 0, last = 0;
@@ -326,7 +415,7 @@
       <p class="cs-hint">🔎 Tap a numbered box to see that question: what the student picked and the right answer.</p>
       <ul class="cs-working">${working.map(w => `<li><b>${esc(w.name)}</b> · ${FORM_NAMES[w.part]} · ${onText(w.r, w.part)} · ${soFarHTML(w.r)} <span class="cs-ago">${ago(atOf(w.r))}</span>${liveStrip(w)}${liveMissed(w)}</li>`).join('')}</ul>` : '';
     const table = `<div class="cs-wrap"><table class="cs-table"><thead><tr><th scope="col">Student</th>${FORMS.map(f => `<th scope="col">${FORM_NAMES[f]}</th>`).join('')}</tr></thead>
-      <tbody>${classList.map(st => `<tr><th scope="row">${esc(st.name)}</th>${FORMS.map(f => `<td>${cellHTML(st.parts[f])}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
+      <tbody>${classList.map(st => `<tr><th scope="row">${esc(st.name)}</th>${FORMS.map(f => scCellHTML(st, f, cellHTML(st.parts[f]))).join('')}</tr>`).join('')}</tbody></table></div>`;
     return `${sum}${workingHTML}
       <h3 class="cs-h">Scores <span>1st try → latest try · ▶ = working on it now</span></h3>
       ${table}
@@ -366,10 +455,10 @@
     // most right first for the top 3, fewest right first for the bottom 3; a tie goes to the earlier question
     const top = stats.slice().sort((a, b) => b.right - a.right || a.i - b.i).slice(0, 3);
     const bottom = stats.slice().sort((a, b) => a.right - b.right || a.i - b.i).slice(0, 3);
-    const rankHTML = list => `<ol class="cs-rank">${list.map(s => `<li><div class="cs-rank-head"><b>Question ${s.i + 1}</b>
-      <span class="cs-pill ${heatClass(s.pct)}">${s.right} of ${done.length} right · ${s.pct}%</span></div>
-      <div class="cs-q"><i>${esc(skillOf(s.q.id) || '')}:</i> ${formatMathText(s.q.q)}</div>
-      <button type="button" class="cs-rank-picks h-qbtn" data-q="${s.i}" aria-expanded="false">🔎 What students picked</button></li>`).join('')}</ol>`;
+    const rankHTML = list => `<ol class="cs-rank">${list.map(s => `<li><button type="button" class="cs-rank-btn h-qbtn" data-q="${s.i}" aria-expanded="false" aria-controls="cs-qbox" title="Question ${s.i + 1} · tap to see what students picked"><span class="cs-rank-head"><b>Question ${s.i + 1}</b>
+      <span class="cs-pill ${heatClass(s.pct)}">${s.right} of ${done.length} right · ${s.pct}%</span></span>
+      <span class="cs-q"><i>${esc(skillOf(s.q.id) || '')}:</i> ${formatMathText(s.q.q)}</span>
+      <span class="cs-rank-more">🔎 What students picked</span></button></li>`).join('')}</ol>`;
     const versions = versionsOf(part).length > 1;
     return `<p class="cs-legend">${FORM_NAMES[part]} · each student's <b>${heatMode === 'first' ? '1st try' : 'latest try'}</b> · <span class="h-ok">✓</span> right · <span class="h-miss">✗</span> missed · bottom row = % of the ${done.length} ${done.length === 1 ? 'student' : 'students'} who got it right</p>
       <p class="cs-hint">🔎 Tap a ✓ or ✗ to see what that student picked. Tap a question number or its % to see what everyone picked. Tap Score to sort by score (again to flip; tap Student for A–Z).</p>
@@ -733,8 +822,10 @@
           return;
         }
         if (!quiet) { liveOpen = null; stdOpen = null; }   // ↻ Refresh or a new visit starts closed; the 20-second update keeps the open boxes
+        if (!quiet) scOpen = null;   // a score's box too: ↻ Refresh starts closed; the 20-second update keeps it
         body.innerHTML = classHTML();
         drawLive();
+        drawSc();
         const hasFinished = p => classList.some(st => st.parts[p] && st.parts[p].tries.length);
         if (!hasFinished(heatPart)) { heatPart = FORMS.find(hasFinished) || heatPart; stdOpen = null; }
         showHeat(heatPart);
@@ -819,6 +910,13 @@
       if (go === 'key') app.teacherKey(); else app.teacherTry();
       return;
     }
+    // a student's score (11/25): its box of tries; a ✓ / ✗ in it opens that question; ✕ closes
+    const scb = e.target.closest('.cs-cell');
+    if (scb) { toggleSc(scb.dataset.sc, scb.dataset.scset); return; }
+    const scq = e.target.closest('.sc-qb');
+    if (scq) { toggleScQ(Number(scq.dataset.sctake), Number(scq.dataset.q)); return; }
+    if (e.target.closest('[data-scqclose]')) { scOpen = scOpen && { ...scOpen, take: null, q: null }; drawSc(); return; }
+    if (e.target.closest('[data-scclose]')) { scOpen = null; drawSc(); return; }
     const sq = e.target.closest('.cs-sq[data-live]');
     if (sq) { toggleLive(sq.dataset.live, Number(sq.dataset.q)); return; }
     if (e.target.closest('[data-live-close]')) { liveOpen = null; drawLive(); return; }
@@ -843,7 +941,7 @@
     const qb = e.target.closest('.h-qbtn, .h-pbtn');
     if (qb) {
       toggleQ(Number(qb.dataset.q), null);
-      if (qb.classList.contains('cs-rank-picks') && !$('cs-qbox').hidden) $('cs-qbox').scrollIntoView({ block: 'nearest' });
+      if (qb.classList.contains('cs-rank-btn') && !$('cs-qbox').hidden) $('cs-qbox').scrollIntoView({ block: 'nearest' });   // a Top 3 / Bottom 3 question (11/25: the whole question taps)
       return;
     }
     if (e.target.closest('[data-qclose]')) { closeQ(); return; }
@@ -905,6 +1003,7 @@
     liveOpen = null;
     $('cs-body').innerHTML = classHTML();
     drawLive();
+    drawSc();
     const hasFinished = p => classList.some(st => st.parts[p] && st.parts[p].tries.length);
     if (!hasFinished(heatPart)) heatPart = FORMS.find(hasFinished) || heatPart;
     showHeat(heatPart);
